@@ -7,16 +7,60 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="practice.css">
   <style>
+    .control-panel {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .control {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, .34);
+    }
+
+    .control b {
+      display: block;
+      margin-bottom: 10px;
+      color: #f8fbff;
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .seg button,
+    .route-button {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(15, 23, 42, .74);
+      color: #dbeafe;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .seg button.active,
+    .route-button.primary {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--accent), #22d3ee);
+      color: #07111f;
+    }
+
     .route-demo {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
       gap: 18px;
-      margin-top: 34px;
+      margin-top: 18px;
       align-items: start;
     }
 
     .map-panel {
-      position: relative;
       overflow: hidden;
       border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
       border-radius: 18px;
@@ -33,7 +77,7 @@
       display: block;
       width: 100%;
       height: auto;
-      min-height: 430px;
+      min-height: 420px;
     }
 
     .route-line {
@@ -41,21 +85,17 @@
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 7;
-      opacity: .88;
-      stroke-dasharray: 12 12;
-      animation: routeFlow 2.6s linear infinite;
+      opacity: .92;
+      stroke-dasharray: 13 12;
+      animation: routeFlow 2.7s linear infinite;
     }
 
-    .van-a { stroke: #22d3ee; }
-    .van-b { stroke: #a3e635; }
-    .van-c { stroke: #fb7185; }
-
     @keyframes routeFlow {
-      to { stroke-dashoffset: -48; }
+      to { stroke-dashoffset: -50; }
     }
 
     .node circle {
-      stroke: rgba(255, 255, 255, .75);
+      stroke: rgba(255, 255, 255, .78);
       stroke-width: 3;
       filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .28));
     }
@@ -63,50 +103,20 @@
     .node text {
       fill: #07111f;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 900;
       text-anchor: middle;
       dominant-baseline: central;
     }
 
-    .node-label {
+    .label {
       fill: #dbeafe;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 13px;
+      font-weight: 900;
       paint-order: stroke;
       stroke: rgba(2, 6, 23, .9);
       stroke-width: 4px;
       stroke-linejoin: round;
-    }
-
-    .hub circle { fill: #f8fbff; }
-    .a circle { fill: #22d3ee; }
-    .b circle { fill: #a3e635; }
-    .c circle { fill: #fb7185; }
-
-    .route-controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-      padding: 14px;
-      border-top: 1px solid var(--line);
-    }
-
-    .route-button {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 15px;
-      background: linear-gradient(135deg, var(--accent), #22d3ee);
-      color: #07111f;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .route-button.secondary {
-      background: rgba(15, 23, 42, .72);
-      color: #dbeafe;
-      border: 1px solid var(--line);
     }
 
     .vehicle-stack {
@@ -158,7 +168,7 @@
     .route-seq {
       color: #dbeafe;
       font-weight: 800;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .risk {
@@ -171,9 +181,7 @@
       line-height: 1.5;
     }
 
-    .risk strong {
-      color: #fbbf24;
-    }
+    .risk strong { color: #fbbf24; }
 
     .legend {
       display: grid;
@@ -201,23 +209,14 @@
       line-height: 1.45;
     }
 
-    .explain-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      margin-top: 18px;
-    }
-
     @media (max-width: 860px) {
+      .control-panel,
       .route-demo,
-      .legend,
-      .explain-grid {
+      .legend {
         grid-template-columns: 1fr;
       }
 
-      .route-map {
-        min-height: 330px;
-      }
+      .route-map { min-height: 330px; }
     }
   </style>
 </head>
@@ -227,121 +226,175 @@
     <section class="page" style="--accent:#a78bfa">
       <p class="tag">Routing Problem</p>
       <h1>路線優化</h1>
-      <p class="hero-copy">用 3 台車、9 個配送點視覺化 VRP。這頁是教學模擬：LLM 負責整理限制與產生草稿，真正最短路線仍要交給地圖 API 或最佳化演算法。</p>
+      <p class="hero-copy">這次做成可改的 VRP 沙盤。先改「幾台車、幾個配送點、分配策略」，再看地圖和每台車路線如何變化。這是教學模擬，不是真正地圖最短路。</p>
 
-      <div class="metric-row">
-        <div class="metric"><strong>3</strong><span>台車 / 車手</span></div>
-        <div class="metric"><strong>9</strong><span>配送點</span></div>
-        <div class="metric"><strong>4</strong><span>時間窗風險</span></div>
-        <div class="metric"><strong>VRP</strong><span>Vehicle Routing Problem</span></div>
+      <div class="control-panel">
+        <div class="control">
+          <b>台車數</b>
+          <div class="seg" data-control="vehicles">
+            <button type="button" data-value="2">2</button>
+            <button type="button" data-value="3" class="active">3</button>
+            <button type="button" data-value="4">4</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <b>配送點</b>
+          <div class="seg" data-control="points">
+            <button type="button" data-value="6">6</button>
+            <button type="button" data-value="9" class="active">9</button>
+            <button type="button" data-value="12">12</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <b>分配策略</b>
+          <div class="seg" data-control="strategy">
+            <button type="button" data-value="zone" class="active">區域</button>
+            <button type="button" data-value="balance">平均</button>
+            <button type="button" data-value="priority">急件</button>
+          </div>
+        </div>
       </div>
 
       <div class="route-demo">
         <div class="map-panel">
-          <svg class="route-map" viewBox="0 0 760 520" role="img" aria-label="三台車九個配送點的路線圖">
-            <path class="route-line van-a" d="M380 260 L210 140 L130 260 L270 365 L380 260"></path>
-            <path class="route-line van-b" d="M380 260 L420 105 L560 165 L620 330 L380 260"></path>
-            <path class="route-line van-c" d="M380 260 L500 420 L310 445 L165 430 L380 260"></path>
-
-            <g class="node hub" transform="translate(380 260)">
-              <circle r="34"></circle><text>H</text>
-              <text class="node-label" x="0" y="55">Hub / Workshop</text>
-            </g>
-
-            <g class="node a" transform="translate(210 140)"><circle r="25"></circle><text>A1</text><text class="node-label" x="0" y="-38">Camden</text></g>
-            <g class="node a" transform="translate(130 260)"><circle r="25"></circle><text>A2</text><text class="node-label" x="0" y="-38">Islington</text></g>
-            <g class="node a" transform="translate(270 365)"><circle r="25"></circle><text>A3</text><text class="node-label" x="0" y="44">Shoreditch</text></g>
-
-            <g class="node b" transform="translate(420 105)"><circle r="25"></circle><text>B1</text><text class="node-label" x="0" y="-38">Hackney</text></g>
-            <g class="node b" transform="translate(560 165)"><circle r="25"></circle><text>B2</text><text class="node-label" x="0" y="-38">Stratford</text></g>
-            <g class="node b" transform="translate(620 330)"><circle r="25"></circle><text>B3</text><text class="node-label" x="0" y="44">Greenwich</text></g>
-
-            <g class="node c" transform="translate(500 420)"><circle r="25"></circle><text>C1</text><text class="node-label" x="0" y="44">Brixton</text></g>
-            <g class="node c" transform="translate(310 445)"><circle r="25"></circle><text>C2</text><text class="node-label" x="0" y="44">Chelsea</text></g>
-            <g class="node c" transform="translate(165 430)"><circle r="25"></circle><text>C3</text><text class="node-label" x="0" y="44">Ealing</text></g>
-          </svg>
-          <div class="route-controls">
-            <button class="route-button" id="routeDraft" type="button">AI 產生路線草稿</button>
-            <button class="route-button secondary" id="routeReset" type="button">重置視覺</button>
+          <svg id="routeMap" class="route-map" viewBox="0 0 760 520" role="img" aria-label="可改的路線問題沙盤"></svg>
+          <div class="route-controls" style="padding:14px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap">
+            <button class="route-button primary" id="generate" type="button">重新產生路線</button>
+            <button class="route-button" id="shuffle" type="button">換一組點位</button>
           </div>
         </div>
 
-        <div class="vehicle-stack">
-          <div class="vehicle-card" style="--van:#22d3ee">
-            <div class="vehicle-head">
-              <span class="vehicle-name"><span class="dot"></span>Van A</span>
-              <span class="route-pill">3 stops</span>
-            </div>
-            <div class="route-seq">Hub → A1 → A2 → A3 → Hub</div>
-            <div class="risk"><strong>風險：</strong>A2 需要上午送達，若 A1 延誤超過 20 分鐘要改順序。</div>
-          </div>
-
-          <div class="vehicle-card" style="--van:#a3e635">
-            <div class="vehicle-head">
-              <span class="vehicle-name"><span class="dot"></span>Van B</span>
-              <span class="route-pill">3 stops</span>
-            </div>
-            <div class="route-seq">Hub → B1 → B2 → B3 → Hub</div>
-            <div class="risk"><strong>風險：</strong>B3 距離遠，適合給容量較大的車，避免午後回程塞車。</div>
-          </div>
-
-          <div class="vehicle-card" style="--van:#fb7185">
-            <div class="vehicle-head">
-              <span class="vehicle-name"><span class="dot"></span>Van C</span>
-              <span class="route-pill">3 stops</span>
-            </div>
-            <div class="route-seq">Hub → C1 → C2 → C3 → Hub</div>
-            <div class="risk"><strong>風險：</strong>C2 是高價維修交付，需拍照簽收，不能只丟包。</div>
-          </div>
-        </div>
+        <div id="vehicleStack" class="vehicle-stack"></div>
       </div>
 
       <div class="legend">
-        <div class="legend-item"><b>LLM 做什麼</b><span>讀訂單文字，整理站點、時間窗、重量、優先級，產生人能懂的路線草稿。</span></div>
-        <div class="legend-item"><b>演算法做什麼</b><span>計算距離、交換順序、平衡車輛負載，找真正比較短且符合限制的解。</span></div>
-        <div class="legend-item"><b>人做什麼</b><span>確認客戶承諾、特殊貨件、現場風險，避免 AI 把不能錯的事當成一般配送。</span></div>
+        <div class="legend-item"><b>你改的是問題</b><span>台車數、配送點數、分配策略一變，路線圖就會跟著重畫。</span></div>
+        <div class="legend-item"><b>LLM 做草稿</b><span>適合整理資料、分組、說明風險，但不保證真的是最短路。</span></div>
+        <div class="legend-item"><b>演算法做最佳化</b><span>正式版要接 OR-Tools、Google Routes 或 Mapbox 才能真的算距離。</span></div>
       </div>
 
-      <div class="explain-grid">
-        <div class="panel">
-          <h2>Routing Problem 是什麼</h2>
-          <p>如果只有一台車，就是 TSP：一台車拜訪所有點，找最短順序。物流常見是 VRP：多台車、多個點、車容量與時間窗限制，目標是降低成本並準時完成。</p>
-        </div>
-
-        <div class="panel">
-          <h2>Prompt 草稿</h2>
-          <pre class="codebox">你是物流排程助理。
-請把 9 個配送點分給 3 台車。
-輸出：
-1. 每台車的站點順序
-2. 為什麼這樣分
-3. 超時、超載、需簽收風險
-4. 哪些地方需要人工確認</pre>
-        </div>
+      <div class="panel wide" style="margin-top:16px">
+        <h2>目前 Prompt 草稿</h2>
+        <pre id="promptBox" class="codebox"></pre>
       </div>
     </section>
   </main>
 
   <script>
-    const draft = document.getElementById("routeDraft");
-    const reset = document.getElementById("routeReset");
-    const lines = document.querySelectorAll(".route-line");
+    const colors = ["#22d3ee", "#a3e635", "#fb7185", "#fbbf24"];
+    const names = ["Camden", "Islington", "Shoreditch", "Hackney", "Stratford", "Greenwich", "Brixton", "Chelsea", "Ealing", "Wembley", "Fulham", "Canary Wharf"];
+    let state = { vehicles: 3, points: 9, strategy: "zone", seed: 0 };
 
-    draft.addEventListener("click", () => {
-      lines.forEach((line, index) => {
-        line.style.animationDuration = `${1.7 + index * .35}s`;
-        line.style.opacity = "1";
+    const basePoints = [
+      [210, 140], [130, 260], [270, 365], [420, 105],
+      [560, 165], [620, 330], [500, 420], [310, 445],
+      [165, 430], [120, 105], [610, 80], [690, 250]
+    ];
+
+    function variedPoints() {
+      return basePoints.slice(0, state.points).map(([x, y], i) => {
+        const offset = ((state.seed + i * 37) % 31) - 15;
+        return { id: `P${i + 1}`, name: names[i], x: x + offset, y: y - offset };
       });
-      draft.textContent = "已產生：3 台車 / 9 點草稿";
+    }
+
+    function assign(points) {
+      const groups = Array.from({ length: state.vehicles }, () => []);
+      points.forEach((point, index) => {
+        let vehicle = 0;
+        if (state.strategy === "balance") vehicle = index % state.vehicles;
+        if (state.strategy === "zone") vehicle = Math.min(state.vehicles - 1, Math.floor(index / Math.ceil(points.length / state.vehicles)));
+        if (state.strategy === "priority") vehicle = index < state.vehicles ? index : (index + 1) % state.vehicles;
+        groups[vehicle].push(point);
+      });
+      return groups;
+    }
+
+    function pathFor(points) {
+      const hub = "M380 260";
+      return `${hub} ${points.map((p) => `L${p.x} ${p.y}`).join(" ")} L380 260`;
+    }
+
+    function render() {
+      const points = variedPoints();
+      const groups = assign(points);
+      const svg = document.getElementById("routeMap");
+      svg.innerHTML = "";
+
+      groups.forEach((group, i) => {
+        if (!group.length) return;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", pathFor(group));
+        path.setAttribute("class", "route-line");
+        path.setAttribute("stroke", colors[i]);
+        svg.appendChild(path);
+      });
+
+      const hub = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      hub.setAttribute("class", "node");
+      hub.setAttribute("transform", "translate(380 260)");
+      hub.innerHTML = `<circle r="34" fill="#f8fbff"></circle><text>H</text><text class="label" x="0" y="55">Hub</text>`;
+      svg.appendChild(hub);
+
+      groups.forEach((group, vehicleIndex) => {
+        group.forEach((point) => {
+          const node = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          node.setAttribute("class", "node");
+          node.setAttribute("transform", `translate(${point.x} ${point.y})`);
+          node.innerHTML = `<circle r="25" fill="${colors[vehicleIndex]}"></circle><text>${point.id}</text><text class="label" x="0" y="${point.y < 150 ? 44 : -38}">${point.name}</text>`;
+          svg.appendChild(node);
+        });
+      });
+
+      document.getElementById("vehicleStack").innerHTML = groups.map((group, i) => {
+        const seq = group.map((p) => p.id).join(" → ");
+        const risk = state.strategy === "priority"
+          ? "急件優先：前幾點先分給不同車，降低等待時間。"
+          : state.strategy === "balance"
+            ? "平均分配：每台車站點數接近，但可能跨區跑比較遠。"
+            : "區域分配：同區集中，路線好懂，但車輛負載可能不平均。";
+        return `<div class="vehicle-card" style="--van:${colors[i]}">
+          <div class="vehicle-head">
+            <span class="vehicle-name"><span class="dot"></span>Van ${String.fromCharCode(65 + i)}</span>
+            <span class="route-pill">${group.length} stops</span>
+          </div>
+          <div class="route-seq">Hub${seq ? " → " + seq : ""} → Hub</div>
+          <div class="risk"><strong>提醒：</strong>${risk}</div>
+        </div>`;
+      }).join("");
+
+      document.getElementById("promptBox").textContent =
+`你是物流排程助理。
+請把 ${state.points} 個配送點分給 ${state.vehicles} 台車。
+分配策略：${state.strategy === "zone" ? "同區集中" : state.strategy === "balance" ? "平均站點數" : "急件優先"}。
+輸出：
+1. 每台車的站點順序
+2. 為什麼這樣分
+3. 哪些車可能超時、超載或跨區
+4. 哪些點需要人工確認`;
+    }
+
+    document.querySelectorAll("[data-control]").forEach((group) => {
+      group.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => {
+          group.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          const key = group.dataset.control;
+          state[key] = key === "strategy" ? button.dataset.value : Number(button.dataset.value);
+          render();
+        });
+      });
     });
 
-    reset.addEventListener("click", () => {
-      lines.forEach((line) => {
-        line.style.animationDuration = "";
-        line.style.opacity = "";
-      });
-      draft.textContent = "AI 產生路線草稿";
+    document.getElementById("generate").addEventListener("click", render);
+    document.getElementById("shuffle").addEventListener("click", () => {
+      state.seed += 11;
+      render();
     });
+
+    render();
   </script>
 </body>
 </html>
