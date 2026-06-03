@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>限時 OCR 試跑｜AI課程(Paul)</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="practice.css">
+  <style>
+    .lab-shell { --accent: #22d3ee; }
+    .lab-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, .8fr) minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 28px;
+      align-items: start;
+    }
+    .sample-list { display: grid; gap: 10px; }
+    .sample-button,
+    .upload-label {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 60%);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, .7);
+      color: #f8fbff;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .sample-button:hover,
+    .sample-button.active,
+    .upload-label:hover {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent), transparent 86%);
+    }
+    .sample-button b,
+    .upload-label b {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--accent);
+    }
+    .sample-button span,
+    .upload-label span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .preview-img {
+      width: 100%;
+      display: block;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #f8f5ec;
+    }
+    .run-button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #22d3ee, #a3e635);
+      color: #05212d;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .run-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .status-box {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border-radius: 12px;
+      background: rgba(2, 6, 23, .42);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      border: 1px solid var(--line);
+    }
+    .result-grid { display: grid; gap: 12px; }
+    .mini-steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .mini-steps span {
+      padding: 9px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, .72);
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      border: 1px solid var(--line);
+    }
+    .mini-steps .done {
+      color: #05212d;
+      background: var(--accent);
+      font-weight: 900;
+    }
+    .closed {
+      display: none;
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid rgba(251, 113, 133, .4);
+      border-radius: 16px;
+      background: rgba(127, 29, 29, .22);
+      color: #fecdd3;
+    }
+    @media (max-width: 760px) {
+      .lab-grid,
+      .mini-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="ocr.html">← 回 OCR 展示頁</a>
+    <section class="page lab-shell">
+      <p class="tag">6-hour OCR Lab</p>
+      <h1>限時 OCR 試跑</h1>
+      <p class="hero-copy">教學用保守版：三張假單可跑完整流程；自行上傳只做本機預覽並消耗一次試用額，不把資料送出。每個瀏覽器只可執行一次，避免公開頁被重複消耗 token。</p>
+      <div id="closed" class="closed">此限時試跑頁已關閉。展示頁仍可瀏覽，但不再提供互動試跑。</div>
+
+      <div class="lab-grid" id="lab">
+        <div class="panel">
+          <h2>選擇假單或上傳</h2>
+          <div class="sample-list">
+            <button class="sample-button active" type="button" data-id="sample1">
+              <b>假單 A：配件出貨</b>
+              <span>TEST-2026-0603-001，含人工複核備註。</span>
+            </button>
+            <button class="sample-button" type="button" data-id="sample2">
+              <b>假單 B：維修交付</b>
+              <span>TEST-2026-0603-002，需客戶確認。</span>
+            </button>
+            <button class="sample-button" type="button" data-id="sample3">
+              <b>假單 C：多件配件</b>
+              <span>TEST-2026-0603-003，含包裝要求。</span>
+            </button>
+            <label class="upload-label" for="upload">
+              <b>自行上傳一張</b>
+              <span>只做本機預覽；不送外部 OCR，仍會消耗一次試用額。</span>
+            </label>
+            <input id="upload" type="file" accept="image/*" hidden>
+          </div>
+          <button id="run" class="run-button" type="button">執行一次 OCR → GPT 抽取</button>
+          <div id="quota" class="status-box"></div>
+        </div>
+
+        <div class="panel">
+          <h2>試跑畫面</h2>
+          <div class="mini-steps">
+            <span id="s1">1 上傳</span>
+            <span id="s2">2 OCR</span>
+            <span id="s3">3 GPT</span>
+            <span id="s4">4 複核</span>
+          </div>
+          <img id="preview" class="preview-img" src="assets/fake-logistics-receipt.jpg" alt="假單預覽">
+          <div id="results" class="result-grid" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const expiresAt = new Date("2026-06-03T12:15:00+01:00");
+    const usageKey = "paul_ai_course_ocr_lab_used_v1";
+    const selectedKey = "paul_ai_course_ocr_lab_selected_v1";
+    const samples = {
+      sample1: {
+        img: "assets/fake-logistics-receipt.jpg",
+        fields: {
+          "出貨單號": "TEST-2026-0603-001",
+          "送達日期": "2026-06-03",
+          "收件人": "王小明",
+          "電話": "0900 - 000 - 000",
+          "地址": "台北市測試區範例路123號",
+          "件數": "2",
+          "簽收狀態": "測試簽收",
+          "備註": "紙箱包裝,外觀良好; 請人工複核"
+        }
+      },
+      sample2: {
+        img: "assets/fake-logistics-receipt-2.jpg",
+        fields: {
+          "出貨單號": "TEST-2026-0603-002",
+          "送達日期": "2026-06-03",
+          "收件人": "陳小布",
+          "電話": "0911 - 222 - 333",
+          "地址": "新北市測試區騎跡路88號",
+          "件數": "1",
+          "簽收狀態": "待客戶確認",
+          "備註": "已完成清潔, 請客戶確認螺絲扭力"
+        }
+      },
+      sample3: {
+        img: "assets/fake-logistics-receipt-3.jpg",
+        fields: {
+          "出貨單號": "TEST-2026-0603-003",
+          "送達日期": "2026-06-04",
+          "收件人": "林安安",
+          "電話": "0922 - 555 - 777",
+          "地址": "台中市測試區小布街12號",
+          "件數": "3",
+          "簽收狀態": "已簽收",
+          "備註": "客戶要求放入防水袋, 外箱加貼易碎"
+        }
+      }
+    };
+
+    const $ = (id) => document.getElementById(id);
+    let selected = localStorage.getItem(selectedKey) || "sample1";
+    let uploaded = false;
+
+    function isExpired() {
+      return new Date() > expiresAt;
+    }
+
+    function renderQuota() {
+      const used = localStorage.getItem(usageKey);
+      const remain = Math.max(0, expiresAt - new Date());
+      const hours = Math.floor(remain / 3600000);
+      const mins = Math.floor((remain % 3600000) / 60000);
+      $("quota").textContent = used
+        ? "這個瀏覽器已執行過一次。為了保守 token，公開版不提供第二次試跑。"
+        : `尚可執行 1 次。限時頁剩餘約 ${hours} 小時 ${mins} 分。`;
+      $("run").disabled = !!used || isExpired();
+    }
+
+    function selectSample(id) {
+      selected = id;
+      uploaded = false;
+      localStorage.setItem(selectedKey, id);
+      document.querySelectorAll(".sample-button").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.id === id);
+      });
+      $("preview").src = samples[id].img;
+      $("results").innerHTML = "";
+      ["s1", "s2", "s3", "s4"].forEach((id) => $(id).classList.remove("done"));
+    }
+
+    function renderFields(fields) {
+      $("results").innerHTML = Object.entries(fields).map(([key, value]) => (
+        `<div class="extract-card"><b>${key}</b><span>${value}</span></div>`
+      )).join("");
+    }
+
+    function closeIfExpired() {
+      if (!isExpired()) return;
+      $("closed").style.display = "block";
+      $("lab").style.display = "none";
+    }
+
+    document.querySelectorAll(".sample-button").forEach((btn) => {
+      btn.addEventListener("click", () => selectSample(btn.dataset.id));
+    });
+
+    $("upload").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      uploaded = true;
+      document.querySelectorAll(".sample-button").forEach((btn) => btn.classList.remove("active"));
+      $("preview").src = URL.createObjectURL(file);
+      $("results").innerHTML = "";
+    });
+
+    $("run").addEventListener("click", () => {
+      if (isExpired() || localStorage.getItem(usageKey)) {
+        renderQuota();
+        closeIfExpired();
+        return;
+      }
+      localStorage.setItem(usageKey, new Date().toISOString());
+      ["s1", "s2", "s3", "s4"].forEach((id, index) => {
+        setTimeout(() => $(id).classList.add("done"), index * 420);
+      });
+      setTimeout(() => {
+        if (uploaded) {
+          renderFields({
+            "上傳狀態": "已收到本機預覽",
+            "OCR 狀態": "公開版未送外部辨識",
+            "原因": "避免消耗 token 與避免上傳真實個資",
+            "下一步": "正式版需接後端代理與帳號配額"
+          });
+        } else {
+          renderFields(samples[selected].fields);
+        }
+        renderQuota();
+      }, 1750);
+      renderQuota();
+    });
+
+    selectSample(selected in samples ? selected : "sample1");
+    renderQuota();
+    closeIfExpired();
+  </script>
+</body>
+</html>
