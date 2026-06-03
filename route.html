@@ -6,57 +6,342 @@
   <title>路線優化｜AI課程(Paul)</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="practice.css">
+  <style>
+    .route-demo {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 18px;
+      margin-top: 34px;
+      align-items: start;
+    }
+
+    .map-panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
+      border-radius: 18px;
+      background:
+        linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px),
+        radial-gradient(circle at 28% 22%, rgba(167, 139, 250, .18), transparent 30%),
+        rgba(2, 6, 23, .42);
+      background-size: 44px 44px, 44px 44px, auto, auto;
+      box-shadow: 0 20px 52px rgba(0, 0, 0, .26);
+    }
+
+    .route-map {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 430px;
+    }
+
+    .route-line {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 7;
+      opacity: .88;
+      stroke-dasharray: 12 12;
+      animation: routeFlow 2.6s linear infinite;
+    }
+
+    .van-a { stroke: #22d3ee; }
+    .van-b { stroke: #a3e635; }
+    .van-c { stroke: #fb7185; }
+
+    @keyframes routeFlow {
+      to { stroke-dashoffset: -48; }
+    }
+
+    .node circle {
+      stroke: rgba(255, 255, 255, .75);
+      stroke-width: 3;
+      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .28));
+    }
+
+    .node text {
+      fill: #07111f;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .node-label {
+      fill: #dbeafe;
+      font-size: 14px;
+      font-weight: 800;
+      paint-order: stroke;
+      stroke: rgba(2, 6, 23, .9);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    .hub circle { fill: #f8fbff; }
+    .a circle { fill: #22d3ee; }
+    .b circle { fill: #a3e635; }
+    .c circle { fill: #fb7185; }
+
+    .route-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .route-button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 15px;
+      background: linear-gradient(135deg, var(--accent), #22d3ee);
+      color: #07111f;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .route-button.secondary {
+      background: rgba(15, 23, 42, .72);
+      color: #dbeafe;
+      border: 1px solid var(--line);
+    }
+
+    .vehicle-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .vehicle-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(2, 6, 23, .38);
+    }
+
+    .vehicle-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .vehicle-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #f8fbff;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--van);
+      box-shadow: 0 0 18px var(--van);
+    }
+
+    .route-pill {
+      border-radius: 999px;
+      padding: 6px 9px;
+      background: color-mix(in srgb, var(--van), transparent 84%);
+      color: var(--van);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .route-seq {
+      color: #dbeafe;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .risk {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, .62);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .risk strong {
+      color: #fbbf24;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .legend-item {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, .62);
+      border: 1px solid var(--line);
+    }
+
+    .legend-item b {
+      display: block;
+      color: #f8fbff;
+      margin-bottom: 4px;
+    }
+
+    .legend-item span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .route-demo,
+      .legend,
+      .explain-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .route-map {
+        min-height: 330px;
+      }
+    }
+  </style>
 </head>
 <body>
   <main>
     <a class="back" href="index.html">← 回首頁</a>
     <section class="page" style="--accent:#a78bfa">
-      <p class="tag">Route AI</p>
+      <p class="tag">Routing Problem</p>
       <h1>路線優化</h1>
-      <p class="hero-copy">先用 LLM 做「營運助理」：整理配送限制、提醒風險、產生初版路線。等需求穩定後，再接 Google Maps、Mapbox 或專業 VRP API。</p>
+      <p class="hero-copy">用 3 台車、9 個配送點視覺化 VRP。這頁是教學模擬：LLM 負責整理限制與產生草稿，真正最短路線仍要交給地圖 API 或最佳化演算法。</p>
 
       <div class="metric-row">
-        <div class="metric"><strong>5</strong><span>模擬站點</span></div>
-        <div class="metric"><strong>2</strong><span>時間窗限制</span></div>
-        <div class="metric"><strong>1</strong><span>人工確認人</span></div>
-        <div class="metric"><strong>API+</strong><span>成熟後再升級</span></div>
+        <div class="metric"><strong>3</strong><span>台車 / 車手</span></div>
+        <div class="metric"><strong>9</strong><span>配送點</span></div>
+        <div class="metric"><strong>4</strong><span>時間窗風險</span></div>
+        <div class="metric"><strong>VRP</strong><span>Vehicle Routing Problem</span></div>
       </div>
 
-      <div class="grid">
-        <div class="panel">
-          <h2>模擬配送順序</h2>
-          <div class="route-list">
-            <div class="stop"><span class="pin">A</span><div><strong>Workshop</strong><small>出發，檢查工具與配件箱</small></div><span class="time">09:00</span></div>
-            <div class="stop"><span class="pin">B</span><div><strong>Camden</strong><small>客戶偏好上午，需帶替換輪組</small></div><span class="time">09:40</span></div>
-            <div class="stop"><span class="pin">C</span><div><strong>Islington</strong><small>小布維修交付，需拍照留存</small></div><span class="time">10:25</span></div>
-            <div class="stop"><span class="pin">D</span><div><strong>Shoreditch</strong><small>配件到貨通知，可順路放件</small></div><span class="time">11:20</span></div>
-            <div class="stop"><span class="pin">E</span><div><strong>Workshop</strong><small>回店更新 Shopify / PayPal 狀態</small></div><span class="time">12:10</span></div>
+      <div class="route-demo">
+        <div class="map-panel">
+          <svg class="route-map" viewBox="0 0 760 520" role="img" aria-label="三台車九個配送點的路線圖">
+            <path class="route-line van-a" d="M380 260 L210 140 L130 260 L270 365 L380 260"></path>
+            <path class="route-line van-b" d="M380 260 L420 105 L560 165 L620 330 L380 260"></path>
+            <path class="route-line van-c" d="M380 260 L500 420 L310 445 L165 430 L380 260"></path>
+
+            <g class="node hub" transform="translate(380 260)">
+              <circle r="34"></circle><text>H</text>
+              <text class="node-label" x="0" y="55">Hub / Workshop</text>
+            </g>
+
+            <g class="node a" transform="translate(210 140)"><circle r="25"></circle><text>A1</text><text class="node-label" x="0" y="-38">Camden</text></g>
+            <g class="node a" transform="translate(130 260)"><circle r="25"></circle><text>A2</text><text class="node-label" x="0" y="-38">Islington</text></g>
+            <g class="node a" transform="translate(270 365)"><circle r="25"></circle><text>A3</text><text class="node-label" x="0" y="44">Shoreditch</text></g>
+
+            <g class="node b" transform="translate(420 105)"><circle r="25"></circle><text>B1</text><text class="node-label" x="0" y="-38">Hackney</text></g>
+            <g class="node b" transform="translate(560 165)"><circle r="25"></circle><text>B2</text><text class="node-label" x="0" y="-38">Stratford</text></g>
+            <g class="node b" transform="translate(620 330)"><circle r="25"></circle><text>B3</text><text class="node-label" x="0" y="44">Greenwich</text></g>
+
+            <g class="node c" transform="translate(500 420)"><circle r="25"></circle><text>C1</text><text class="node-label" x="0" y="44">Brixton</text></g>
+            <g class="node c" transform="translate(310 445)"><circle r="25"></circle><text>C2</text><text class="node-label" x="0" y="44">Chelsea</text></g>
+            <g class="node c" transform="translate(165 430)"><circle r="25"></circle><text>C3</text><text class="node-label" x="0" y="44">Ealing</text></g>
+          </svg>
+          <div class="route-controls">
+            <button class="route-button" id="routeDraft" type="button">AI 產生路線草稿</button>
+            <button class="route-button secondary" id="routeReset" type="button">重置視覺</button>
           </div>
         </div>
 
+        <div class="vehicle-stack">
+          <div class="vehicle-card" style="--van:#22d3ee">
+            <div class="vehicle-head">
+              <span class="vehicle-name"><span class="dot"></span>Van A</span>
+              <span class="route-pill">3 stops</span>
+            </div>
+            <div class="route-seq">Hub → A1 → A2 → A3 → Hub</div>
+            <div class="risk"><strong>風險：</strong>A2 需要上午送達，若 A1 延誤超過 20 分鐘要改順序。</div>
+          </div>
+
+          <div class="vehicle-card" style="--van:#a3e635">
+            <div class="vehicle-head">
+              <span class="vehicle-name"><span class="dot"></span>Van B</span>
+              <span class="route-pill">3 stops</span>
+            </div>
+            <div class="route-seq">Hub → B1 → B2 → B3 → Hub</div>
+            <div class="risk"><strong>風險：</strong>B3 距離遠，適合給容量較大的車，避免午後回程塞車。</div>
+          </div>
+
+          <div class="vehicle-card" style="--van:#fb7185">
+            <div class="vehicle-head">
+              <span class="vehicle-name"><span class="dot"></span>Van C</span>
+              <span class="route-pill">3 stops</span>
+            </div>
+            <div class="route-seq">Hub → C1 → C2 → C3 → Hub</div>
+            <div class="risk"><strong>風險：</strong>C2 是高價維修交付，需拍照簽收，不能只丟包。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><b>LLM 做什麼</b><span>讀訂單文字，整理站點、時間窗、重量、優先級，產生人能懂的路線草稿。</span></div>
+        <div class="legend-item"><b>演算法做什麼</b><span>計算距離、交換順序、平衡車輛負載，找真正比較短且符合限制的解。</span></div>
+        <div class="legend-item"><b>人做什麼</b><span>確認客戶承諾、特殊貨件、現場風險，避免 AI 把不能錯的事當成一般配送。</span></div>
+      </div>
+
+      <div class="explain-grid">
         <div class="panel">
-          <h2>AI 要先問清楚</h2>
-          <ul>
-            <li>每個點的最早與最晚可送時間。</li>
-            <li>貨件大小、是否可丟包、是否需要簽收。</li>
-            <li>車輛或騎乘限制：容量、重量、工具、天氣。</li>
-            <li>哪些客戶不能遲到，哪些可以改天。</li>
-            <li>資料來源是 Google Sheet、Shopify 訂單還是人工輸入。</li>
-          </ul>
+          <h2>Routing Problem 是什麼</h2>
+          <p>如果只有一台車，就是 TSP：一台車拜訪所有點，找最短順序。物流常見是 VRP：多台車、多個點、車容量與時間窗限制，目標是降低成本並準時完成。</p>
         </div>
 
-        <div class="panel wide">
+        <div class="panel">
           <h2>Prompt 草稿</h2>
-          <pre class="codebox">你是小型單車店的配送排程助理。
-請根據站點、時間窗、包裹大小與優先級，排出一條半日路線。
+          <pre class="codebox">你是物流排程助理。
+請把 9 個配送點分給 3 台車。
 輸出：
-1. 建議順序
-2. 每站預估到達時間
-3. 需要人工確認的風險
-4. 若下雨或前一站延誤 30 分鐘，替代方案</pre>
+1. 每台車的站點順序
+2. 為什麼這樣分
+3. 超時、超載、需簽收風險
+4. 哪些地方需要人工確認</pre>
         </div>
       </div>
     </section>
   </main>
+
+  <script>
+    const draft = document.getElementById("routeDraft");
+    const reset = document.getElementById("routeReset");
+    const lines = document.querySelectorAll(".route-line");
+
+    draft.addEventListener("click", () => {
+      lines.forEach((line, index) => {
+        line.style.animationDuration = `${1.7 + index * .35}s`;
+        line.style.opacity = "1";
+      });
+      draft.textContent = "已產生：3 台車 / 9 點草稿";
+    });
+
+    reset.addEventListener("click", () => {
+      lines.forEach((line) => {
+        line.style.animationDuration = "";
+        line.style.opacity = "";
+      });
+      draft.textContent = "AI 產生路線草稿";
+    });
+  </script>
 </body>
 </html>
