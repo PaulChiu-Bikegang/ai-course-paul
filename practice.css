@@ -291,6 +291,74 @@ p {
   line-height: 1.55;
 }
 
+.demo-stage {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 34px;
+  align-items: start;
+}
+
+.media-frame {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.36);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+}
+
+.media-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.media-caption {
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  border-top: 1px solid var(--line);
+}
+
+.extract-board {
+  display: grid;
+  gap: 12px;
+}
+
+.extract-card {
+  display: grid;
+  grid-template-columns: 144px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
+  border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent), transparent 90%), rgba(2, 6, 23, 0.42));
+}
+
+.extract-card b {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.extract-card span {
+  color: #f8fbff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.source-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.screenshot-strip {
+  margin-top: 16px;
+}
+
 @media (max-width: 700px) {
   body {
     padding: 18px 12px 28px;
@@ -331,7 +399,8 @@ p {
   .grid,
   .metric-row,
   .flowline,
-  .campaign {
+  .campaign,
+  .demo-stage {
     grid-template-columns: 1fr;
   }
 
@@ -353,6 +422,15 @@ p {
 
   .product-card {
     min-height: 150px;
+  }
+
+  .extract-card {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .extract-card span {
+    font-size: 16px;
   }
 }
 

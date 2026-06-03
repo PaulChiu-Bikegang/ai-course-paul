@@ -29,6 +29,27 @@
         <div class="step"><b>4 複核</b><span>低信心或特殊備註交給人確認，再寫入表格。</span></div>
       </div>
 
+      <div class="demo-stage">
+        <div class="media-frame">
+          <img src="assets/fake-logistics-receipt.jpg" alt="測試用虛構物流回單">
+          <div class="media-caption">假測試單：內容純屬虛構，可安心拿來做課堂 OCR 展示。</div>
+        </div>
+
+        <div class="panel">
+          <h2>AI 抓出的欄位配對</h2>
+          <div class="extract-board" aria-label="AI extracted field mapping">
+            <div class="extract-card"><b>出貨單號</b><span>TEST-2026-0603-001</span></div>
+            <div class="extract-card"><b>送達日期</b><span>2026-06-03</span></div>
+            <div class="extract-card"><b>收件人</b><span>王小明</span></div>
+            <div class="extract-card"><b>電話</b><span>0900 - 000 - 000</span></div>
+            <div class="extract-card"><b>地址</b><span>台北市測試區範例路123號</span></div>
+            <div class="extract-card"><b>簽收狀態</b><span>測試簽收</span></div>
+            <div class="extract-card"><b>備註</b><span>紙箱包裝,外觀良好; 請人工複核</span></div>
+          </div>
+          <p class="source-note">展示重點：人看到的是單據，系統要的是欄位。AI 的價值在於把兩者配對，並把需要人工複核的地方標出來。</p>
+        </div>
+      </div>
+
       <div class="grid">
         <div class="panel">
           <h2>抽取結果範例</h2>
@@ -52,6 +73,14 @@
             <li>每天下午產出待追蹤清單，減少人工翻圖。</li>
             <li>避免把真實客戶資料放進課堂展示，先用匿名樣本。</li>
           </ul>
+        </div>
+
+        <div class="panel wide">
+          <h2>剛才 Demo 成功截圖</h2>
+          <div class="media-frame screenshot-strip">
+            <img src="assets/ocr-demo-result-screenshot-wide.png" alt="OCR 與 GPT 抽取成功截圖">
+            <div class="media-caption">這張是剛才用老師 Demo API 跑出的成果畫面：OCR 文字在右上，GPT 結構化 JSON 在右下。</div>
+          </div>
         </div>
 
         <div class="panel wide">
