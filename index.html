@@ -38,7 +38,7 @@
         linear-gradient(135deg, #07111f 0%, #0b1020 52%, #111827 100%);
       color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
-      padding: 32px 18px;
+      padding: 34px 18px;
     }
 
     main {
@@ -46,7 +46,11 @@
     }
 
     header {
-      margin-bottom: 24px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 26px;
+      margin-bottom: 26px;
     }
 
     .eyebrow {
@@ -73,6 +77,20 @@
       line-height: 1.7;
     }
 
+    .status {
+      flex: 0 0 auto;
+      width: 172px;
+      padding: 14px;
+      border: 1px solid rgba(34, 211, 238, 0.24);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, 0.32);
+      color: #bae6fd;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+      text-align: right;
+    }
+
     .board {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -95,6 +113,7 @@
       box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
       transform: translateY(0);
       transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .tile::before {
@@ -200,15 +219,99 @@
     @media (max-width: 720px) {
       body {
         place-items: start center;
+        padding: 22px 14px;
+      }
+
+      header {
+        display: block;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      h1 {
+        font-size: 44px;
+      }
+
+      .subtitle {
+        margin-top: 12px;
+        font-size: 15px;
+        line-height: 1.58;
+      }
+
+      .status {
+        width: 100%;
+        margin-top: 14px;
+        padding: 11px 12px;
+        text-align: left;
+        font-size: 12px;
       }
 
       .board {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
       }
 
       .tile {
-        min-height: 210px;
-        padding: 24px;
+        min-height: 178px;
+        padding: 15px;
+        border-radius: 16px;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+      }
+
+      .tile:hover,
+      .tile:focus-visible {
+        transform: translateY(-4px);
+      }
+
+      .tile-number {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 14px;
+        font-size: 14px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      .tile p {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.42;
+      }
+
+      .tile-footer {
+        margin-top: 14px;
+        gap: 10px;
+        font-size: 11px;
+      }
+
+      .arrow {
+        width: 30px;
+        height: 30px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .tile {
+        min-height: 164px;
+        padding: 13px;
+      }
+
+      h1 {
+        font-size: 39px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .tile p {
+        font-size: 12px;
       }
     }
   </style>
@@ -216,9 +319,12 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">AI Course Lab</p>
-      <h1>AI課程(Paul)</h1>
-      <p class="subtitle">Day 2 實作入口。先用輕工具跑通價值，再把能省成本、能賺營收的流程升級成可重複的 AI 工作流。</p>
+      <div>
+        <p class="eyebrow">AI Course Lab</p>
+        <h1>AI課程(Paul)</h1>
+        <p class="subtitle">Day 2 實作入口。先用輕工具跑通價值，再把能省成本、能賺營收的流程升級成可重複的 AI 工作流。</p>
+      </div>
+      <div class="status">Logistics AI<br>Practice Board</div>
     </header>
 
     <nav class="board" aria-label="AI course practice pages">
