@@ -1,35 +1,275 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI課程(Paul)</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: rgba(15, 23, 42, 0.78);
+      --line: rgba(148, 163, 184, 0.24);
+      --text: #e5f3ff;
+      --muted: #9fb2c7;
+      --cyan: #22d3ee;
+      --lime: #a3e635;
+      --violet: #a78bfa;
+      --pink: #fb7185;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     html,
     body {
-      height: 100%;
+      min-height: 100%;
       margin: 0;
     }
 
     body {
       display: grid;
       place-items: center;
-      background: #f7f7f4;
-      color: #1f2933;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(34, 211, 238, 0.22), transparent 32%),
+        radial-gradient(circle at 82% 20%, rgba(167, 139, 250, 0.2), transparent 30%),
+        linear-gradient(135deg, #07111f 0%, #0b1020 52%, #111827 100%);
+      color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
+      padding: 32px 18px;
+    }
+
+    main {
+      width: min(1040px, 100%);
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--cyan);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(56px, 12vw, 160px);
-      font-weight: 800;
-      text-align: center;
+      font-size: clamp(42px, 8vw, 88px);
+      line-height: 0.95;
       letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .tile {
+      position: relative;
+      min-height: 230px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+      transform: translateY(0);
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+    }
+
+    .tile::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(135deg, var(--accent), transparent 46%);
+      opacity: 0.12;
+      transition: opacity 180ms ease;
+    }
+
+    .tile:hover,
+    .tile:focus-visible {
+      transform: translateY(-8px);
+      border-color: color-mix(in srgb, var(--accent), white 20%);
+      background: rgba(15, 23, 42, 0.94);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38), 0 0 34px color-mix(in srgb, var(--accent), transparent 58%);
+      outline: none;
+    }
+
+    .tile:hover::before,
+    .tile:focus-visible::before {
+      opacity: 0.28;
+    }
+
+    .tile:nth-child(1) {
+      --accent: var(--cyan);
+    }
+
+    .tile:nth-child(2) {
+      --accent: var(--lime);
+    }
+
+    .tile:nth-child(3) {
+      --accent: var(--violet);
+    }
+
+    .tile:nth-child(4) {
+      --accent: var(--pink);
+    }
+
+    .tile-content,
+    .tile-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .tile-number {
+      display: inline-grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      margin-bottom: 24px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent), transparent 78%);
+      color: var(--accent);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(25px, 3vw, 38px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .tile p {
+      max-width: 360px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.58;
+    }
+
+    .tile-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 28px;
+      color: color-mix(in srgb, var(--accent), white 12%);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .arrow {
+      display: grid;
+      width: 40px;
+      height: 40px;
+      place-items: center;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent), transparent 78%);
+      transition: transform 180ms ease, background 180ms ease;
+    }
+
+    .tile:hover .arrow,
+    .tile:focus-visible .arrow {
+      transform: translateX(4px);
+      background: color-mix(in srgb, var(--accent), transparent 58%);
+    }
+
+    @media (max-width: 720px) {
+      body {
+        place-items: start center;
+      }
+
+      .board {
+        grid-template-columns: 1fr;
+      }
+
+      .tile {
+        min-height: 210px;
+        padding: 24px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>AI課程(Paul)</h1>
+  <main>
+    <header>
+      <p class="eyebrow">AI Course Lab</p>
+      <h1>AI課程(Paul)</h1>
+      <p class="subtitle">Day 2 實作入口。先用輕工具跑通價值，再把能省成本、能賺營收的流程升級成可重複的 AI 工作流。</p>
+    </header>
+
+    <nav class="board" aria-label="AI course practice pages">
+      <a class="tile" href="ocr.html">
+        <div class="tile-content">
+          <span class="tile-number">01</span>
+          <h2>回單 OCR</h2>
+          <p>從 OCR + Regex、OCR + Text LLM 到 Vision LLM，整理單據辨識與人工複核流程。</p>
+        </div>
+        <div class="tile-footer">
+          <span>Document AI</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a class="tile" href="pain-map.html">
+        <div class="tile-content">
+          <span class="tile-number">02</span>
+          <h2>痛點地圖</h2>
+          <p>把自家流程拆成重複工作、判斷節點、資料來源與人工確認點。</p>
+        </div>
+        <div class="tile-footer">
+          <span>Workflow Map</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a class="tile" href="route.html">
+        <div class="tile-content">
+          <span class="tile-number">03</span>
+          <h2>路線優化</h2>
+          <p>用 LLM 先快速規劃配送點、車輛限制與時間窗，再評估是否升級專業 API。</p>
+        </div>
+        <div class="tile-footer">
+          <span>Route AI</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a class="tile" href="marketing.html">
+        <div class="tile-content">
+          <span class="tile-number">04</span>
+          <h2>AI 行銷</h2>
+          <p>產品照、SEO 文章、社群貼文與留客訊息，先建立一條內容生產線。</p>
+        </div>
+        <div class="tile-footer">
+          <span>Growth Engine</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+    </nav>
+  </main>
 </body>
 </html>
