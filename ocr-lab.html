@@ -107,6 +107,46 @@
       font: 13px/1.6 Consolas, "SF Mono", ui-monospace, monospace;
       white-space: pre-wrap;
     }
+    .prompt-editor {
+      width: 100%;
+      min-height: 260px;
+      resize: vertical;
+      padding: 14px;
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
+      border-radius: 14px;
+      background: #020617;
+      color: #dbeafe;
+      font: 13px/1.6 Consolas, "SF Mono", ui-monospace, monospace;
+    }
+    .prompt-tools {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .prompt-hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .field-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .field-chips button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .72);
+      color: #dbeafe;
+      padding: 7px 10px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .field-chips button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
     .mini-steps {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -180,6 +220,25 @@
         </div>
 
         <div class="panel">
+          <h2>Prompt 編輯區</h2>
+          <textarea id="promptInput" class="prompt-editor" spellcheck="false"></textarea>
+          <div class="prompt-tools">
+            <div class="prompt-hint">可以直接刪除欄位、改欄位順序、改規則。下方按鈕會把常用欄位插到游標位置。</div>
+            <div class="field-chips" aria-label="插入欄位">
+              <button type="button" data-field="tracking_no">tracking_no</button>
+              <button type="button" data-field="delivery_date">delivery_date</button>
+              <button type="button" data-field="receiver">receiver</button>
+              <button type="button" data-field="address">address</button>
+              <button type="button" data-field="phone">phone</button>
+              <button type="button" data-field="quantity">quantity</button>
+              <button type="button" data-field="sign_status">sign_status</button>
+              <button type="button" data-field="note">note</button>
+            </div>
+            <button id="resetPrompt" class="sample-button" type="button"><b>還原完整 Prompt</b><span>回到最完整欄位與規則。</span></button>
+          </div>
+        </div>
+
+        <div class="panel">
           <h2>試跑畫面</h2>
           <div class="mini-steps">
             <span id="s1">1 上傳</span>
@@ -190,7 +249,7 @@
           <img id="preview" class="preview-img" src="assets/fake-logistics-receipt.jpg" alt="假單預覽">
           <div class="lab-output">
             <div id="promptBlock" class="output-block">
-              <h3>固定 Prompt</h3>
+              <h3>這次送出的 Prompt</h3>
               <pre id="promptText" class="output-text"></pre>
             </div>
             <div id="ocrBlock" class="output-block">
@@ -211,10 +270,25 @@
   <script>
     const expiresAt = new Date("2026-06-03T12:15:00+01:00");
     const selectedKey = "paul_ai_course_ocr_lab_selected_v1";
-    const fixedPrompt = `你是物流回單資料抽取助手。
-請從 OCR 文字抽取資料，直接輸出一個 JSON object，不要 markdown，不要說明。
-欄位：tracking_no, delivery_date, receiver, address, phone, quantity, sign_status, note。
-日期請轉成 YYYY-MM-DD。找不到填 null。中文內容請照原文保留。`;
+    const fullPrompt = `你是物流回單資料抽取助手。以下「OCR 文字」是從一張回單圖片辨識出來的內容，可能有缺漏字、錯字或順序錯亂。
+
+請依語意理解後，抽取下列欄位，並直接輸出一個 JSON object，不要 markdown，不要額外說明：
+
+1. 託運單號 / 出貨單號 (tracking_no)
+2. 配送日期 / 送達日期 (delivery_date)
+3. 收件人 / 客戶姓名 (receiver)
+4. 收件地址 (address)
+5. 聯絡電話 (phone)
+6. 件數 / 數量 (quantity)
+7. 簽收狀態 (sign_status)
+8. 備註 (note)
+
+規則：
+- 日期統一成 YYYY-MM-DD。
+- 數量請輸出數字。
+- 找不到的欄位請填 null。
+- 中文內容請照原文保留。
+- 如果備註包含「人工複核、待確認、易碎、防水」等提醒，請保留在 note。`;
     const samples = {
       sample1: {
         img: "assets/fake-logistics-receipt.jpg",
@@ -307,6 +381,24 @@ TEST-2026-0603-003
     let selected = localStorage.getItem(selectedKey) || "sample1";
     let uploaded = false;
 
+    function promptText() {
+      return $("promptInput").value.trim() || fullPrompt;
+    }
+
+    function requestedFields() {
+      const text = promptText();
+      return [
+        ["tracking_no", "出貨單號"],
+        ["delivery_date", "送達日期"],
+        ["receiver", "收件人"],
+        ["address", "地址"],
+        ["phone", "電話"],
+        ["quantity", "件數"],
+        ["sign_status", "簽收狀態"],
+        ["note", "備註"]
+      ].filter(([key]) => text.includes(key));
+    }
+
     function isExpired() {
       return new Date() > expiresAt;
     }
@@ -335,19 +427,26 @@ TEST-2026-0603-003
     }
 
     function renderFields(fields) {
-      $("results").innerHTML = Object.entries(fields).map(([key, value]) => (
+      const wanted = requestedFields();
+      const entries = wanted.length ? wanted.map(([, label]) => [label, fields[label] ?? null]) : Object.entries(fields);
+      $("results").innerHTML = entries.map(([key, value]) => (
         `<div class="extract-card"><b>${key}</b><span>${value}</span></div>`
       )).join("");
-      const json = {
-        tracking_no: fields["出貨單號"] || null,
-        delivery_date: fields["送達日期"] || null,
-        receiver: fields["收件人"] || null,
-        address: fields["地址"] || null,
-        phone: fields["電話"] || null,
-        quantity: fields["件數"] || null,
-        sign_status: fields["簽收狀態"] || fields["OCR 狀態"] || null,
-        note: fields["備註"] || fields["下一步"] || null
+      const json = {};
+      const map = {
+        tracking_no: "出貨單號",
+        delivery_date: "送達日期",
+        receiver: "收件人",
+        address: "地址",
+        phone: "電話",
+        quantity: "件數",
+        sign_status: "簽收狀態",
+        note: "備註"
       };
+      const keys = wanted.length ? wanted.map(([key]) => key) : Object.keys(map);
+      keys.forEach((key) => {
+        json[key] = fields[map[key]] ?? null;
+      });
       $("jsonText").textContent = JSON.stringify(json, null, 2);
     }
 
@@ -388,7 +487,7 @@ TEST-2026-0603-003
       });
       setTimeout(() => {
         $("promptBlock").classList.add("show");
-        $("promptText").textContent = fixedPrompt;
+        $("promptText").textContent = promptText();
         if (uploaded) {
           $("ocrBlock").classList.add("show");
           $("ocrText").textContent = "公開模擬版沒有把自行上傳圖片送到 OCR 服務，因此不產生真實 OCR 文字。";
@@ -411,6 +510,23 @@ TEST-2026-0603-003
     });
 
     selectSample(selected in samples ? selected : "sample1");
+    $("promptInput").value = fullPrompt;
+    $("resetPrompt").addEventListener("click", () => {
+      $("promptInput").value = fullPrompt;
+      $("promptInput").focus();
+    });
+    document.querySelectorAll("[data-field]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const field = btn.dataset.field;
+        const input = $("promptInput");
+        const insert = `\n- ${field}`;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.slice(0, start) + insert + input.value.slice(end);
+        input.focus();
+        input.selectionStart = input.selectionEnd = start + insert.length;
+      });
+    });
     renderQuota();
     closeIfExpired();
   </script>
