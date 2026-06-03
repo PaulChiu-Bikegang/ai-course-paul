@@ -133,6 +133,53 @@
       flex-wrap: wrap;
       gap: 8px;
     }
+    .keyword-board {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 48px;
+      padding: 10px;
+      border: 1px dashed color-mix(in srgb, var(--accent), transparent 55%);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, .32);
+    }
+    .keyword-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 8px 8px 12px;
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 45%);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent), transparent 84%);
+      color: #f8fbff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: grab;
+      user-select: none;
+    }
+    .keyword-chip:active {
+      cursor: grabbing;
+    }
+    .keyword-chip.dragging {
+      opacity: .45;
+    }
+    .keyword-chip button {
+      display: inline-grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(2, 6, 23, .48);
+      color: #dbeafe;
+      cursor: pointer;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .keyword-chip button:hover {
+      background: #fb7185;
+      color: #07111f;
+    }
     .field-chips button {
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -221,9 +268,13 @@
 
         <div class="panel">
           <h2>Prompt 編輯區</h2>
+          <div class="prompt-tools" style="margin-top:0;margin-bottom:12px">
+            <div class="prompt-hint">欄位關鍵字可以拖曳改順序，按 x 刪除。下方 Prompt 會自動跟著更新。</div>
+            <div id="keywordBoard" class="keyword-board" aria-label="可排序欄位關鍵字"></div>
+          </div>
           <textarea id="promptInput" class="prompt-editor" spellcheck="false"></textarea>
           <div class="prompt-tools">
-            <div class="prompt-hint">可以直接刪除欄位、改欄位順序、改規則。下方按鈕會把常用欄位插到游標位置。</div>
+            <div class="prompt-hint">可以再手動改規則。下方按鈕可把刪掉的欄位加回 oval chips。</div>
             <div class="field-chips" aria-label="插入欄位">
               <button type="button" data-field="tracking_no">tracking_no</button>
               <button type="button" data-field="delivery_date">delivery_date</button>
@@ -270,18 +321,29 @@
   <script>
     const expiresAt = new Date("2026-06-03T12:15:00+01:00");
     const selectedKey = "paul_ai_course_ocr_lab_selected_v1";
-    const fullPrompt = `你是物流回單資料抽取助手。以下「OCR 文字」是從一張回單圖片辨識出來的內容，可能有缺漏字、錯字或順序錯亂。
+    const fieldCatalog = [
+      ["tracking_no", "託運單號 / 出貨單號"],
+      ["delivery_date", "配送日期 / 送達日期"],
+      ["receiver", "收件人 / 客戶姓名"],
+      ["address", "收件地址"],
+      ["phone", "聯絡電話"],
+      ["quantity", "件數 / 數量"],
+      ["sign_status", "簽收狀態"],
+      ["note", "備註"]
+    ];
+    const defaultFields = fieldCatalog.map(([key]) => key);
+    let fieldsState = [...defaultFields];
+
+    function buildPrompt() {
+      const lines = fieldsState.map((key, index) => {
+        const item = fieldCatalog.find(([fieldKey]) => fieldKey === key);
+        return `${index + 1}. ${item[1]} (${item[0]})`;
+      }).join("\n");
+      return `你是物流回單資料抽取助手。以下「OCR 文字」是從一張回單圖片辨識出來的內容，可能有缺漏字、錯字或順序錯亂。
 
 請依語意理解後，抽取下列欄位，並直接輸出一個 JSON object，不要 markdown，不要額外說明：
 
-1. 託運單號 / 出貨單號 (tracking_no)
-2. 配送日期 / 送達日期 (delivery_date)
-3. 收件人 / 客戶姓名 (receiver)
-4. 收件地址 (address)
-5. 聯絡電話 (phone)
-6. 件數 / 數量 (quantity)
-7. 簽收狀態 (sign_status)
-8. 備註 (note)
+${lines || "（目前沒有指定欄位，請新增至少一個欄位。）"}
 
 規則：
 - 日期統一成 YYYY-MM-DD。
@@ -289,6 +351,7 @@
 - 找不到的欄位請填 null。
 - 中文內容請照原文保留。
 - 如果備註包含「人工複核、待確認、易碎、防水」等提醒，請保留在 note。`;
+    }
     const samples = {
       sample1: {
         img: "assets/fake-logistics-receipt.jpg",
@@ -382,21 +445,64 @@ TEST-2026-0603-003
     let uploaded = false;
 
     function promptText() {
-      return $("promptInput").value.trim() || fullPrompt;
+      return $("promptInput").value.trim() || buildPrompt();
     }
 
     function requestedFields() {
-      const text = promptText();
-      return [
-        ["tracking_no", "出貨單號"],
-        ["delivery_date", "送達日期"],
-        ["receiver", "收件人"],
-        ["address", "地址"],
-        ["phone", "電話"],
-        ["quantity", "件數"],
-        ["sign_status", "簽收狀態"],
-        ["note", "備註"]
-      ].filter(([key]) => text.includes(key));
+      const labels = {
+        tracking_no: "出貨單號",
+        delivery_date: "送達日期",
+        receiver: "收件人",
+        address: "地址",
+        phone: "電話",
+        quantity: "件數",
+        sign_status: "簽收狀態",
+        note: "備註"
+      };
+      return fieldsState.map((key) => [key, labels[key]]).filter(([, label]) => label);
+    }
+
+    function syncPrompt() {
+      $("promptInput").value = buildPrompt();
+    }
+
+    function renderKeywordBoard() {
+      $("keywordBoard").innerHTML = fieldsState.map((key) => {
+        const item = fieldCatalog.find(([fieldKey]) => fieldKey === key);
+        return `<span class="keyword-chip" draggable="true" data-key="${key}">${item[0]}<button type="button" aria-label="刪除 ${item[0]}">x</button></span>`;
+      }).join("");
+
+      document.querySelectorAll(".keyword-chip").forEach((chip) => {
+        chip.addEventListener("dragstart", () => chip.classList.add("dragging"));
+        chip.addEventListener("dragend", () => {
+          chip.classList.remove("dragging");
+          fieldsState = [...document.querySelectorAll(".keyword-chip")].map((item) => item.dataset.key);
+          syncPrompt();
+        });
+        chip.querySelector("button").addEventListener("click", () => {
+          fieldsState = fieldsState.filter((key) => key !== chip.dataset.key);
+          renderKeywordBoard();
+          syncPrompt();
+        });
+      });
+    }
+
+    $("keywordBoard").addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const dragging = document.querySelector(".keyword-chip.dragging");
+      const after = [...$("keywordBoard").querySelectorAll(".keyword-chip:not(.dragging)")].find((chip) => {
+        const box = chip.getBoundingClientRect();
+        return event.clientY < box.top + box.height / 2 && event.clientX < box.right;
+      });
+      if (!dragging) return;
+      if (after) $("keywordBoard").insertBefore(dragging, after);
+      else $("keywordBoard").appendChild(dragging);
+    });
+
+    function addField(key) {
+      if (!fieldsState.includes(key)) fieldsState.push(key);
+      renderKeywordBoard();
+      syncPrompt();
     }
 
     function isExpired() {
@@ -510,21 +616,17 @@ TEST-2026-0603-003
     });
 
     selectSample(selected in samples ? selected : "sample1");
-    $("promptInput").value = fullPrompt;
+    renderKeywordBoard();
+    syncPrompt();
     $("resetPrompt").addEventListener("click", () => {
-      $("promptInput").value = fullPrompt;
+      fieldsState = [...defaultFields];
+      renderKeywordBoard();
+      syncPrompt();
       $("promptInput").focus();
     });
     document.querySelectorAll("[data-field]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const field = btn.dataset.field;
-        const input = $("promptInput");
-        const insert = `\n- ${field}`;
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.slice(0, start) + insert + input.value.slice(end);
-        input.focus();
-        input.selectionStart = input.selectionEnd = start + insert.length;
+        addField(btn.dataset.field);
       });
     });
     renderQuota();
