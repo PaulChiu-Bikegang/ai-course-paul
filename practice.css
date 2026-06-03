@@ -365,6 +365,44 @@ p {
   border-top: 1px solid var(--line);
 }
 
+.hero-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.hero-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 15px 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--accent), #a3e635);
+  color: #05212d;
+  text-decoration: none;
+  font-weight: 950;
+  box-shadow: 0 20px 44px color-mix(in srgb, var(--accent), transparent 68%);
+  transform: translateY(0);
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.hero-button:hover,
+.hero-button:focus-visible {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+  outline: none;
+}
+
+.hero-action span {
+  max-width: 340px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .action-button {
   display: inline-flex;
   align-items: center;
