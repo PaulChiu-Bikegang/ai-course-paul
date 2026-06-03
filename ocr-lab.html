@@ -150,7 +150,7 @@
     <section class="page lab-shell">
       <p class="tag">6-hour OCR Lab</p>
       <h1>限時 OCR 試跑</h1>
-      <p class="hero-copy">教學用保守版：三張假單可跑完整流程；自行上傳只做本機預覽並消耗一次試用額，不把資料送出。每個瀏覽器只可執行一次，避免公開頁被重複消耗 token。</p>
+      <p class="hero-copy">教學用模擬版：三張假單可反覆跑完整流程；自行上傳只做本機預覽，不把資料送出，也不消耗 API token。</p>
       <div id="closed" class="closed">此限時試跑頁已關閉。展示頁仍可瀏覽，但不再提供互動試跑。</div>
 
       <div class="lab-grid" id="lab">
@@ -171,7 +171,7 @@
             </button>
             <label class="upload-label" for="upload">
               <b>自行上傳一張</b>
-              <span>只做本機預覽；不送外部 OCR，仍會消耗一次試用額。</span>
+              <span>只做本機預覽；不送外部 OCR，不消耗 token。</span>
             </label>
             <input id="upload" type="file" accept="image/*" hidden>
           </div>
@@ -210,7 +210,6 @@
 
   <script>
     const expiresAt = new Date("2026-06-03T12:15:00+01:00");
-    const usageKey = "paul_ai_course_ocr_lab_used_v2";
     const selectedKey = "paul_ai_course_ocr_lab_selected_v1";
     const fixedPrompt = `你是物流回單資料抽取助手。
 請從 OCR 文字抽取資料，直接輸出一個 JSON object，不要 markdown，不要說明。
@@ -313,14 +312,11 @@ TEST-2026-0603-003
     }
 
     function renderQuota() {
-      const used = localStorage.getItem(usageKey);
       const remain = Math.max(0, expiresAt - new Date());
       const hours = Math.floor(remain / 3600000);
       const mins = Math.floor((remain % 3600000) / 60000);
-      $("quota").textContent = used
-        ? "這個瀏覽器已執行過一次。為了保守 token，公開版不提供第二次試跑。"
-        : `尚可執行 1 次。限時頁剩餘約 ${hours} 小時 ${mins} 分。`;
-      $("run").disabled = !!used || isExpired();
+      $("quota").textContent = `純模擬流程，可反覆試跑。限時頁剩餘約 ${hours} 小時 ${mins} 分。`;
+      $("run").disabled = isExpired();
     }
 
     function selectSample(id) {
@@ -378,12 +374,15 @@ TEST-2026-0603-003
     });
 
     $("run").addEventListener("click", () => {
-      if (isExpired() || localStorage.getItem(usageKey)) {
+      if (isExpired()) {
         renderQuota();
         closeIfExpired();
         return;
       }
-      localStorage.setItem(usageKey, new Date().toISOString());
+      $("results").innerHTML = "";
+      $("jsonText").textContent = "";
+      ["promptBlock", "ocrBlock", "resultBlock"].forEach((id) => $(id).classList.remove("show"));
+      ["s1", "s2", "s3", "s4"].forEach((id) => $(id).classList.remove("done"));
       ["s1", "s2", "s3", "s4"].forEach((id, index) => {
         setTimeout(() => $(id).classList.add("done"), index * 420);
       });
