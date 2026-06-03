@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>最後 AI 生成範例｜AI課程(Paul)</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="practice.css">
+  <style>
+    .report {
+      display: grid;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .report-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, 0.38);
+      padding: 18px;
+    }
+
+    .report-card h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 12px;
+      color: #f8fbff;
+      font-size: 20px;
+    }
+
+    .badge {
+      display: inline-grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent), transparent 76%);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .report-card p,
+    .report-card li {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.68;
+    }
+
+    .report-card p {
+      max-width: none;
+      margin: 0;
+    }
+
+    .report-card ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .output-box {
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 52%);
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent), transparent 90%), rgba(2, 6, 23, 0.54));
+      padding: 22px;
+    }
+
+    .output-box h2 {
+      margin: 0 0 16px;
+      color: #f8fbff;
+      font-size: 24px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .summary-item {
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.68);
+      border: 1px solid var(--line);
+    }
+
+    .summary-item b {
+      display: block;
+      color: var(--accent);
+      font-size: 22px;
+    }
+
+    .summary-item span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 700px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="index.html">← 回首頁</a>
+    <section class="page" style="--accent:#38bdf8">
+      <p class="tag">AI Generated Example</p>
+      <h1>最後 AI 生成範例</h1>
+      <p class="hero-copy">依照課程簡報的做法，先把資料整理成標準輸入，再讓 AI 產生一份可讀、可討論、可交給人複核的營運建議。這頁是示範輸出，不是實際排程系統。</p>
+
+      <div class="metric-row">
+        <div class="metric"><strong>Demo2</strong><span>出貨歷史</span></div>
+        <div class="metric"><strong>Demo4</strong><span>智能排班</span></div>
+        <div class="metric"><strong>Demo6</strong><span>路線優化</span></div>
+        <div class="metric"><strong>Human</strong><span>最後審核</span></div>
+      </div>
+
+      <div class="report">
+        <div class="output-box">
+          <h2>AI 生成的主管摘要</h2>
+          <p>根據 70 天出貨歷史，下週週一與週五仍是高峰日，建議把早班人力維持在 4 人以上，週五晚班提高到 3 人。配送端以 2 台車處理 15 個配送點，車A 承擔上午嚴格時間窗與較高重量點，車B 負責中山、中正、萬華與較分散的補點。正式上線前，需由調度確認司機技能、實際交通時間、車輛容量與客戶臨時要求。</p>
+
+          <div class="summary-grid">
+            <div class="summary-item"><b>週一/週五</b><span>預估貨量高，優先補早班與備援。</span></div>
+            <div class="summary-item"><b>2 台車</b><span>車A 740/800kg，車B 490/500kg。</span></div>
+            <div class="summary-item"><b>3 個風險</b><span>時間窗、技能限制、交通距離需人工確認。</span></div>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <h2><span class="badge">1</span>需求預估</h2>
+          <ul>
+            <li>週一出貨量樣本 1270 件，週五 1210 件，明顯高於週末。</li>
+            <li>高峰日建議提前確認人力與車輛，避免上午單據辨識完成後才臨時加派。</li>
+            <li>若遇促銷、節日前或大量訂單，需把預估值上修，不能只靠歷史平均。</li>
+          </ul>
+        </div>
+
+        <div class="report-card">
+          <h2><span class="badge">2</span>人力排班</h2>
+          <ul>
+            <li>週一需求：早班 4 人、晚班 2 人。</li>
+            <li>週五需求：早班 4 人、晚班 3 人，是下週最高人力需求日。</li>
+            <li>司機安排需檢查可上班日、每週時數上限，以及大車、冷鏈、危險品等技能。</li>
+          </ul>
+        </div>
+
+        <div class="report-card">
+          <h2><span class="badge">3</span>出車路線</h2>
+          <ul>
+            <li>車A：優先跑 D07 松山機場貨運站、D12 內湖科技園區等上午嚴格時間窗與大量點。</li>
+            <li>車B：承接 D01、D14、D08、D09、D10、D05、D02、D11、D13，載重接近上限。</li>
+            <li>AI 可以先產生分配草稿，但正式最短路與 ETA 應交給 OR-Tools 或地圖路線 API 計算。</li>
+          </ul>
+        </div>
+
+        <div class="report-card">
+          <h2><span class="badge">4</span>建議 Prompt</h2>
+          <pre class="codebox">你是物流營運助理。
+請根據以下資料產生一份主管摘要：
+1. 出貨歷史：指出高峰日與低峰日
+2. 班表需求：建議早晚班人力
+3. 司機名單：檢查技能、可上班日、時數上限
+4. 配送點與車輛：提出出車分配草稿
+
+輸出格式：
+- 100 字內主管摘要
+- 需求預估
+- 人力排班建議
+- 出車路線建議
+- 需要人工確認的風險</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
