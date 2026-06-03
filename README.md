@@ -1,3 +1,3 @@
-# Hello World Pages
+# AI課程(Paul)
 
-Minimal GitHub Pages smoke test.
+Public GitHub Pages site for Paul's AI course notes and practice work.
