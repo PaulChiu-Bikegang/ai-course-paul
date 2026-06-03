@@ -13,8 +13,49 @@
     <section class="page" style="--accent:#a78bfa">
       <p class="tag">Route AI</p>
       <h1>路線優化</h1>
-      <p>預留給配送點、車輛限制、時間窗與 LLM 排線結果。先用輕工具驗證，再決定是否上專業 API。</p>
-      <div class="placeholder">Placeholder：之後可放 Excel 範例、車輛路線表、預估里程，以及 London/BWC 現場交付規劃。</div>
+      <p class="hero-copy">先用 LLM 做「營運助理」：整理配送限制、提醒風險、產生初版路線。等需求穩定後，再接 Google Maps、Mapbox 或專業 VRP API。</p>
+
+      <div class="metric-row">
+        <div class="metric"><strong>5</strong><span>模擬站點</span></div>
+        <div class="metric"><strong>2</strong><span>時間窗限制</span></div>
+        <div class="metric"><strong>1</strong><span>人工確認人</span></div>
+        <div class="metric"><strong>API+</strong><span>成熟後再升級</span></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>模擬配送順序</h2>
+          <div class="route-list">
+            <div class="stop"><span class="pin">A</span><div><strong>Workshop</strong><small>出發，檢查工具與配件箱</small></div><span class="time">09:00</span></div>
+            <div class="stop"><span class="pin">B</span><div><strong>Camden</strong><small>客戶偏好上午，需帶替換輪組</small></div><span class="time">09:40</span></div>
+            <div class="stop"><span class="pin">C</span><div><strong>Islington</strong><small>小布維修交付，需拍照留存</small></div><span class="time">10:25</span></div>
+            <div class="stop"><span class="pin">D</span><div><strong>Shoreditch</strong><small>配件到貨通知，可順路放件</small></div><span class="time">11:20</span></div>
+            <div class="stop"><span class="pin">E</span><div><strong>Workshop</strong><small>回店更新 Shopify / PayPal 狀態</small></div><span class="time">12:10</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>AI 要先問清楚</h2>
+          <ul>
+            <li>每個點的最早與最晚可送時間。</li>
+            <li>貨件大小、是否可丟包、是否需要簽收。</li>
+            <li>車輛或騎乘限制：容量、重量、工具、天氣。</li>
+            <li>哪些客戶不能遲到，哪些可以改天。</li>
+            <li>資料來源是 Google Sheet、Shopify 訂單還是人工輸入。</li>
+          </ul>
+        </div>
+
+        <div class="panel wide">
+          <h2>Prompt 草稿</h2>
+          <pre class="codebox">你是小型單車店的配送排程助理。
+請根據站點、時間窗、包裹大小與優先級，排出一條半日路線。
+輸出：
+1. 建議順序
+2. 每站預估到達時間
+3. 需要人工確認的風險
+4. 若下雨或前一站延誤 30 分鐘，替代方案</pre>
+        </div>
+      </div>
     </section>
   </main>
 </body>

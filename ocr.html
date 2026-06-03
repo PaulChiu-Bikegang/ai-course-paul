@@ -13,8 +13,52 @@
     <section class="page" style="--accent:#22d3ee">
       <p class="tag">Document AI</p>
       <h1>回單 OCR</h1>
-      <p>預留給課堂實作成果：回單圖片、OCR 欄位抽取、confidence、人工複核標記與 Excel 輸出。</p>
-      <div class="placeholder">Placeholder：之後可放 Demo 截圖、JSON schema、Excel 下載連結，或 BIKEgang 訂單/出貨單的匿名化範例。</div>
+      <p class="hero-copy">用老師 Demo 跑過一次「Google Vision OCR → GPT 結構化抽欄位」。重點不是辨識一張圖，而是把回單變成可檢查、可匯出、可追蹤的資料。</p>
+
+      <div class="metric-row" aria-label="OCR demo metrics">
+        <div class="metric"><strong>8</strong><span>抽取欄位</span></div>
+        <div class="metric"><strong>1</strong><span>人工複核點</span></div>
+        <div class="metric"><strong>JSON</strong><span>可直接進表格</span></div>
+        <div class="metric"><strong>低成本</strong><span>改 Prompt 不重跑 OCR</span></div>
+      </div>
+
+      <div class="flowline">
+        <div class="step"><b>1 上傳</b><span>回單、簽收單、維修交付單，先用匿名測試圖。</span></div>
+        <div class="step"><b>2 OCR</b><span>Google Vision 只負責把圖片轉文字。</span></div>
+        <div class="step"><b>3 GPT</b><span>依 Prompt 抽欄位，日期格式與缺漏值統一。</span></div>
+        <div class="step"><b>4 複核</b><span>低信心或特殊備註交給人確認，再寫入表格。</span></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>抽取結果範例</h2>
+          <pre class="codebox">{
+  "tracking_no": "TEST-2026-0603-001",
+  "delivery_date": "2026-06-03",
+  "receiver": "王小明",
+  "address": "台北市測試區範例路123號",
+  "phone": "0900 - 000 - 000",
+  "quantity": 2,
+  "sign_status": "測試簽收",
+  "note": "紙箱包裝,外觀良好; 請人工複核"
+}</pre>
+        </div>
+
+        <div class="panel">
+          <h2>BIKEgang 可用情境</h2>
+          <ul>
+            <li>把出貨回單、簽收照片整理成 Google Sheet。</li>
+            <li>自動標記「地址不完整、簽名缺失、備註需複核」。</li>
+            <li>每天下午產出待追蹤清單，減少人工翻圖。</li>
+            <li>避免把真實客戶資料放進課堂展示，先用匿名樣本。</li>
+          </ul>
+        </div>
+
+        <div class="panel wide">
+          <h2>下一步資料準備</h2>
+          <p>準備 5 到 10 張不同格式的測試回單：清楚、模糊、斜拍、有手寫備註、缺欄位各一張。每張人工先填一份正確答案，之後才能比較 AI 抓取品質。</p>
+        </div>
+      </div>
     </section>
   </main>
 </body>

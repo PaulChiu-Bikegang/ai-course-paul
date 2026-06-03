@@ -29,7 +29,7 @@ body {
 }
 
 main {
-  width: min(900px, 100%);
+  width: min(1120px, 100%);
   margin: 0 auto;
 }
 
@@ -54,7 +54,7 @@ a {
 .page {
   min-height: 72vh;
   display: grid;
-  align-content: center;
+  align-content: start;
   padding: 42px;
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -97,6 +97,200 @@ p {
   line-height: 1.7;
 }
 
+.hero-copy {
+  max-width: 780px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.34);
+  padding: 20px;
+}
+
+.panel h2,
+.panel h3 {
+  margin: 0 0 12px;
+  color: #f8fbff;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.panel p,
+.panel li {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.panel p {
+  margin: 0;
+}
+
+.panel ul,
+.panel ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.metric {
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 64%);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+}
+
+.metric strong {
+  display: block;
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.metric span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.codebox {
+  overflow-x: auto;
+  margin: 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: #020617;
+  color: #dbeafe;
+  font: 13px/1.65 Consolas, "SF Mono", ui-monospace, monospace;
+  white-space: pre;
+}
+
+.flowline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.step {
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.66);
+  border: 1px solid var(--line);
+}
+
+.step b {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--accent);
+}
+
+.step span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.route-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stop {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.66);
+  border: 1px solid var(--line);
+}
+
+.pin {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent), transparent 80%);
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.stop strong {
+  display: block;
+}
+
+.stop small {
+  display: block;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.time {
+  color: #f8fbff;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.campaign {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.product-card {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent), transparent 25%), transparent),
+    radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.24), transparent 28%),
+    #0f172a;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 48%);
+  display: grid;
+  place-items: center;
+  color: #f8fbff;
+  font-weight: 800;
+  text-align: center;
+  padding: 14px;
+}
+
+.copy-card {
+  display: grid;
+  gap: 12px;
+}
+
+.copy-line {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.66);
+  color: #dbeafe;
+  border: 1px solid var(--line);
+  line-height: 1.55;
+}
+
 @media (max-width: 700px) {
   body {
     padding: 18px 12px 28px;
@@ -132,6 +326,33 @@ p {
     margin-top: 24px;
     padding: 16px;
     font-size: 14px;
+  }
+
+  .grid,
+  .metric-row,
+  .flowline,
+  .campaign {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    margin-top: 24px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .stop {
+    grid-template-columns: 36px 1fr;
+  }
+
+  .time {
+    grid-column: 2;
+  }
+
+  .product-card {
+    min-height: 150px;
   }
 }
 
