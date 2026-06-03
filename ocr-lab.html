@@ -79,6 +79,34 @@
       border: 1px solid var(--line);
     }
     .result-grid { display: grid; gap: 12px; }
+    .lab-output {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .output-block {
+      display: none;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, .42);
+    }
+    .output-block.show {
+      display: block;
+    }
+    .output-block h3 {
+      margin: 0 0 10px;
+      color: #f8fbff;
+      font-size: 16px;
+    }
+    .output-text {
+      margin: 0;
+      max-height: 220px;
+      overflow: auto;
+      color: #dbeafe;
+      font: 13px/1.6 Consolas, "SF Mono", ui-monospace, monospace;
+      white-space: pre-wrap;
+    }
     .mini-steps {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -160,7 +188,21 @@
             <span id="s4">4 複核</span>
           </div>
           <img id="preview" class="preview-img" src="assets/fake-logistics-receipt.jpg" alt="假單預覽">
-          <div id="results" class="result-grid" style="margin-top:16px"></div>
+          <div class="lab-output">
+            <div id="promptBlock" class="output-block">
+              <h3>固定 Prompt</h3>
+              <pre id="promptText" class="output-text"></pre>
+            </div>
+            <div id="ocrBlock" class="output-block">
+              <h3>模擬 OCR 文字</h3>
+              <pre id="ocrText" class="output-text"></pre>
+            </div>
+            <div id="resultBlock" class="output-block">
+              <h3>GPT 對應抽取結果</h3>
+              <div id="results" class="result-grid"></div>
+              <pre id="jsonText" class="output-text" style="margin-top:14px"></pre>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -168,11 +210,31 @@
 
   <script>
     const expiresAt = new Date("2026-06-03T12:15:00+01:00");
-    const usageKey = "paul_ai_course_ocr_lab_used_v1";
+    const usageKey = "paul_ai_course_ocr_lab_used_v2";
     const selectedKey = "paul_ai_course_ocr_lab_selected_v1";
+    const fixedPrompt = `你是物流回單資料抽取助手。
+請從 OCR 文字抽取資料，直接輸出一個 JSON object，不要 markdown，不要說明。
+欄位：tracking_no, delivery_date, receiver, address, phone, quantity, sign_status, note。
+日期請轉成 YYYY-MM-DD。找不到填 null。中文內容請照原文保留。`;
     const samples = {
       sample1: {
         img: "assets/fake-logistics-receipt.jpg",
+        ocr: `測試物流回單
+出貨單號
+TEST-2026-0603-001
+送達日期
+2026/06/03
+客戶姓名
+王小明
+電話
+0900 - 000 - 000
+地址
+台北市測試區範例路123號
+品名 小布折疊車配件
+數量 2
+收貨簽名 測試簽收
+備註 紙箱包裝,外觀良好
+請人工複核`,
         fields: {
           "出貨單號": "TEST-2026-0603-001",
           "送達日期": "2026-06-03",
@@ -186,6 +248,21 @@
       },
       sample2: {
         img: "assets/fake-logistics-receipt-2.jpg",
+        ocr: `測試維修交付單
+出貨單號
+TEST-2026-0603-002
+送達日期
+2026/06/03
+客戶姓名
+陳小布
+電話
+0911 - 222 - 333
+地址
+新北市測試區騎跡路88號
+品名 Brompton 車頭袋架檢修
+數量 1
+收貨簽名 待客戶確認
+備註 已完成清潔,請客戶確認螺絲扭力`,
         fields: {
           "出貨單號": "TEST-2026-0603-002",
           "送達日期": "2026-06-03",
@@ -199,6 +276,21 @@
       },
       sample3: {
         img: "assets/fake-logistics-receipt-3.jpg",
+        ocr: `測試配件出貨單
+出貨單號
+TEST-2026-0603-003
+送達日期
+2026/06/04
+客戶姓名
+林安安
+電話
+0922 - 555 - 777
+地址
+台中市測試區小布街12號
+品名 Titanium bolt set + easy wheel
+數量 3
+收貨簽名 已簽收
+備註 客戶要求放入防水袋,外箱加貼易碎`,
         fields: {
           "出貨單號": "TEST-2026-0603-003",
           "送達日期": "2026-06-04",
@@ -240,6 +332,9 @@
       });
       $("preview").src = samples[id].img;
       $("results").innerHTML = "";
+      $("promptText").textContent = "";
+      $("ocrText").textContent = "";
+      ["promptBlock", "ocrBlock", "resultBlock"].forEach((id) => $(id).classList.remove("show"));
       ["s1", "s2", "s3", "s4"].forEach((id) => $(id).classList.remove("done"));
     }
 
@@ -247,6 +342,17 @@
       $("results").innerHTML = Object.entries(fields).map(([key, value]) => (
         `<div class="extract-card"><b>${key}</b><span>${value}</span></div>`
       )).join("");
+      const json = {
+        tracking_no: fields["出貨單號"] || null,
+        delivery_date: fields["送達日期"] || null,
+        receiver: fields["收件人"] || null,
+        address: fields["地址"] || null,
+        phone: fields["電話"] || null,
+        quantity: fields["件數"] || null,
+        sign_status: fields["簽收狀態"] || fields["OCR 狀態"] || null,
+        note: fields["備註"] || fields["下一步"] || null
+      };
+      $("jsonText").textContent = JSON.stringify(json, null, 2);
     }
 
     function closeIfExpired() {
@@ -266,6 +372,9 @@
       document.querySelectorAll(".sample-button").forEach((btn) => btn.classList.remove("active"));
       $("preview").src = URL.createObjectURL(file);
       $("results").innerHTML = "";
+      $("promptText").textContent = "";
+      $("ocrText").textContent = "";
+      ["promptBlock", "ocrBlock", "resultBlock"].forEach((id) => $(id).classList.remove("show"));
     });
 
     $("run").addEventListener("click", () => {
@@ -279,7 +388,12 @@
         setTimeout(() => $(id).classList.add("done"), index * 420);
       });
       setTimeout(() => {
+        $("promptBlock").classList.add("show");
+        $("promptText").textContent = fixedPrompt;
         if (uploaded) {
+          $("ocrBlock").classList.add("show");
+          $("ocrText").textContent = "公開模擬版沒有把自行上傳圖片送到 OCR 服務，因此不產生真實 OCR 文字。";
+          $("resultBlock").classList.add("show");
           renderFields({
             "上傳狀態": "已收到本機預覽",
             "OCR 狀態": "公開版未送外部辨識",
@@ -287,6 +401,9 @@
             "下一步": "正式版需接後端代理與帳號配額"
           });
         } else {
+          $("ocrBlock").classList.add("show");
+          $("ocrText").textContent = samples[selected].ocr;
+          $("resultBlock").classList.add("show");
           renderFields(samples[selected].fields);
         }
         renderQuota();
