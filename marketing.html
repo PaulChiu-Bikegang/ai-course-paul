@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI 行銷｜AI課程(Paul)</title>
+  <title>營運預估｜AI課程(Paul)</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="practice.css">
 </head>
@@ -11,49 +11,59 @@
   <main>
     <a class="back" href="index.html">← 回首頁</a>
     <section class="page" style="--accent:#fb7185">
-      <p class="tag">Growth Engine</p>
-      <h1>AI 行銷</h1>
-      <p class="hero-copy">把產品知識變成可重複的內容生產線：產品頁、FAQ、社群貼文、EDM 和售後提醒，先由 AI 產生草稿，再由人校正技術細節。</p>
+      <p class="tag">Demand & Shift</p>
+      <h1>營運預估</h1>
+      <p class="hero-copy">依照課程檔案 Demo2 / Demo4，這頁把假資料的用途串起來：先看出貨歷史預估需求，再把需求轉成司機排班與約束檢查。</p>
 
       <div class="metric-row">
-        <div class="metric"><strong>4</strong><span>輸出渠道</span></div>
-        <div class="metric"><strong>3</strong><span>固定素材</span></div>
-        <div class="metric"><strong>1</strong><span>技術審稿點</span></div>
-        <div class="metric"><strong>週更</strong><span>可排程產出</span></div>
+        <div class="metric"><strong>70</strong><span>天出貨歷史</span></div>
+        <div class="metric"><strong>10</strong><span>位司機名單</span></div>
+        <div class="metric"><strong>14</strong><span>早晚班需求</span></div>
+        <div class="metric"><strong>3</strong><span>約束：日期/技能/時數</span></div>
+      </div>
+
+      <div class="flowline">
+        <div class="step"><b>1 預估貨量</b><span>Demo2 用每日出貨量判斷尖峰日，例如週一/週五較高。</span></div>
+        <div class="step"><b>2 換算需求</b><span>貨量高的日子需要更多早班、晚班或備援人力。</span></div>
+        <div class="step"><b>3 產生班表</b><span>Demo4 依司機可上班日、證照與時數上限排班。</span></div>
+        <div class="step"><b>4 約束檢查</b><span>檢查是否超時、是否有冷鏈/大車/危險品證照。</span></div>
       </div>
 
       <div class="grid">
-        <div class="panel wide">
-          <h2>內容生產線</h2>
-          <div class="campaign">
-            <div class="product-card">Brompton<br>配件示範圖</div>
-            <div class="copy-card">
-              <div class="copy-line"><b>產品頁：</b>把規格、相容車型、安裝注意事項寫成 Shopify 商品描述。</div>
-              <div class="copy-line"><b>FAQ：</b>整理「適不適合我的車」「需不需要工具」「多久能出貨」。</div>
-              <div class="copy-line"><b>社群：</b>轉成短貼文、限動文案、Line 群提醒。</div>
-              <div class="copy-line"><b>售後：</b>出貨後自動寄保養提示與常見問題。</div>
-            </div>
-          </div>
+        <div class="panel">
+          <h2>Demo2：出貨歷史樣本</h2>
+          <pre class="codebox">日期        星期  出貨量
+2026-01-05 週一  1270
+2026-01-06 週二  1020
+2026-01-07 週三   960
+2026-01-08 週四  1000
+2026-01-09 週五  1210
+2026-01-10 週六   740
+2026-01-11 週日   450</pre>
         </div>
 
         <div class="panel">
-          <h2>示範貼文</h2>
-          <p>今天的升級不是為了把車變複雜，而是讓每天通勤少一點摩擦。這款小布配件適合想要快速收納、穩定攜帶，又不想犧牲車身俐落感的騎士。安裝前請先確認車型與年份，若不確定，丟照片給我們判斷。</p>
-        </div>
-
-        <div class="panel">
-          <h2>審稿規則</h2>
+          <h2>AI 可輸出的預估</h2>
           <ul>
-            <li>相容性不能猜，必須回到實測或供應商資料。</li>
-            <li>價格、庫存、交期由系統資料決定，不由 AI 自編。</li>
-            <li>圖片若是生成圖，必須標記為示意，不冒充實拍。</li>
-            <li>最後一關由熟悉產品的人檢查。</li>
+            <li>週一與週五偏高，建議早班增加人力。</li>
+            <li>週末貨量下降，但仍需保留異常件處理人員。</li>
+            <li>若下週促銷或節日前，需把預估貨量上修。</li>
+            <li>輸出結果不是最終決策，要交給班表與車輛資料驗證。</li>
           </ul>
         </div>
 
         <div class="panel wide">
-          <h2>可排程的 AI 工作</h2>
-          <p>每週抓 Shopify 新品、Gmail 常見問題與 Line 群討論主題，整理成「本週內容草稿」。人只需要挑選、修技術細節、發布。這會比一次性寫文更接近公司真正能省時間的做法。</p>
+          <h2>Demo4：智能排班範例</h2>
+          <div class="route-list">
+            <div class="stop"><span class="pin">一</span><div><strong>週一需求</strong><small>早班 4 人 / 晚班 2 人</small></div><span class="time">6 人</span></div>
+            <div class="stop"><span class="pin">五</span><div><strong>週五需求</strong><small>早班 4 人 / 晚班 3 人，週內最高</small></div><span class="time">7 人</span></div>
+            <div class="stop"><span class="pin">證</span><div><strong>技能限制</strong><small>大車、冷鏈、危險品不能亂配，要看司機名單。</small></div><span class="time">約束</span></div>
+          </div>
+        </div>
+
+        <div class="panel wide">
+          <h2>這些假資料要做什麼</h2>
+          <p>它們是給 AI 或最佳化流程的「標準輸入」。先用 Demo2 預估需求，再用 Demo4 排出人力，最後 Demo6 才能安排哪些車出門、跑哪些配送點。</p>
         </div>
       </div>
     </section>

@@ -3,397 +3,115 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>路線優化｜AI課程(Paul)</title>
+  <title>出車路線｜AI課程(Paul)</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="practice.css">
   <style>
-    .control-panel {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .control {
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(2, 6, 23, .34);
-    }
-
-    .control b {
-      display: block;
-      margin-bottom: 10px;
-      color: #f8fbff;
-    }
-
-    .seg {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .seg button,
-    .route-button {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(15, 23, 42, .74);
-      color: #dbeafe;
-      font: inherit;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .seg button.active,
-    .route-button.primary {
-      border-color: var(--accent);
-      background: linear-gradient(135deg, var(--accent), #22d3ee);
-      color: #07111f;
-    }
-
-    .route-demo {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
-      gap: 18px;
-      margin-top: 18px;
-      align-items: start;
-    }
-
-    .map-panel {
-      overflow: hidden;
-      border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
-      border-radius: 18px;
-      background:
-        linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px),
-        radial-gradient(circle at 28% 22%, rgba(167, 139, 250, .18), transparent 30%),
-        rgba(2, 6, 23, .42);
-      background-size: 44px 44px, 44px 44px, auto, auto;
-      box-shadow: 0 20px 52px rgba(0, 0, 0, .26);
-    }
-
-    .route-map {
-      display: block;
-      width: 100%;
-      height: auto;
-      min-height: 420px;
-    }
-
-    .route-line {
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 7;
-      opacity: .92;
-      stroke-dasharray: 13 12;
-      animation: routeFlow 2.7s linear infinite;
-    }
-
-    @keyframes routeFlow {
-      to { stroke-dashoffset: -50; }
-    }
-
-    .node circle {
-      stroke: rgba(255, 255, 255, .78);
-      stroke-width: 3;
-      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .28));
-    }
-
-    .node text {
-      fill: #07111f;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 17px;
-      font-weight: 900;
-      text-anchor: middle;
-      dominant-baseline: central;
-    }
-
-    .label {
-      fill: #dbeafe;
-      font-size: 13px;
-      font-weight: 900;
-      paint-order: stroke;
-      stroke: rgba(2, 6, 23, .9);
-      stroke-width: 4px;
-      stroke-linejoin: round;
-    }
-
-    .vehicle-stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .vehicle-card {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      background: rgba(2, 6, 23, .38);
-    }
-
-    .vehicle-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .vehicle-name {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      color: #f8fbff;
-      font-size: 18px;
-      font-weight: 900;
-    }
-
-    .dot {
-      width: 13px;
-      height: 13px;
-      border-radius: 50%;
-      background: var(--van);
-      box-shadow: 0 0 18px var(--van);
-    }
-
-    .route-pill {
-      border-radius: 999px;
-      padding: 6px 9px;
-      background: color-mix(in srgb, var(--van), transparent 84%);
-      color: var(--van);
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .route-seq {
-      color: #dbeafe;
-      font-weight: 800;
-      line-height: 1.55;
-    }
-
-    .risk {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, .62);
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .risk strong { color: #fbbf24; }
-
-    .legend {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .legend-item {
-      padding: 12px;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, .62);
-      border: 1px solid var(--line);
-    }
-
-    .legend-item b {
-      display: block;
-      color: #f8fbff;
-      margin-bottom: 4px;
-    }
-
-    .legend-item span {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    @media (max-width: 860px) {
-      .control-panel,
-      .route-demo,
-      .legend {
-        grid-template-columns: 1fr;
-      }
-
-      .route-map { min-height: 330px; }
-    }
+    .route-demo { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr); gap:18px; margin-top:30px; align-items:start; }
+    .map-panel { border:1px solid color-mix(in srgb,var(--accent),transparent 58%); border-radius:18px; background:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px),rgba(2,6,23,.42); background-size:42px 42px; overflow:hidden; }
+    .route-map { display:block; width:100%; min-height:430px; }
+    .route-line { fill:none; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:12 12; animation:flow 2.7s linear infinite; opacity:.9; }
+    @keyframes flow { to { stroke-dashoffset:-48; } }
+    .node circle { stroke:rgba(255,255,255,.8); stroke-width:3; filter:drop-shadow(0 8px 12px rgba(0,0,0,.28)); }
+    .node text { fill:#07111f; font:900 16px Arial; text-anchor:middle; dominant-baseline:central; }
+    .label { fill:#dbeafe; font:900 12px Arial; paint-order:stroke; stroke:rgba(2,6,23,.9); stroke-width:4px; stroke-linejoin:round; }
+    .vehicle-stack { display:grid; gap:12px; }
+    .vehicle-card { border:1px solid var(--line); border-radius:16px; padding:16px; background:rgba(2,6,23,.38); }
+    .vehicle-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:12px; }
+    .vehicle-name { display:inline-flex; align-items:center; gap:9px; color:#f8fbff; font-size:18px; font-weight:900; }
+    .dot { width:13px; height:13px; border-radius:50%; background:var(--van); box-shadow:0 0 18px var(--van); }
+    .route-pill { border-radius:999px; padding:6px 9px; background:color-mix(in srgb,var(--van),transparent 84%); color:var(--van); font-size:12px; font-weight:900; }
+    .loadbar { height:10px; border-radius:999px; background:rgba(255,255,255,.12); overflow:hidden; margin:10px 0; }
+    .loadbar span { display:block; height:100%; width:var(--load); background:var(--van); }
+    .route-seq { color:#dbeafe; font-weight:800; line-height:1.55; }
+    .risk { margin-top:10px; padding:10px; border-radius:12px; background:rgba(15,23,42,.62); color:var(--muted); font-size:13px; line-height:1.5; }
+    .risk strong { color:#fbbf24; }
+    .toggle-row { display:flex; flex-wrap:wrap; gap:10px; padding:14px; border-top:1px solid var(--line); }
+    .route-button { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:rgba(15,23,42,.74); color:#dbeafe; font:inherit; font-weight:900; cursor:pointer; }
+    .route-button.active { border-color:var(--accent); background:linear-gradient(135deg,var(--accent),#22d3ee); color:#07111f; }
+    .delivery-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:16px; }
+    .delivery { padding:11px; border-radius:12px; background:rgba(15,23,42,.62); border:1px solid var(--line); }
+    .delivery b { color:#f8fbff; display:block; margin-bottom:4px; }
+    .delivery span { color:var(--muted); font-size:12px; line-height:1.45; display:block; }
+    @media(max-width:860px){ .route-demo,.delivery-list{grid-template-columns:1fr;} .route-map{min-height:330px;} }
   </style>
 </head>
 <body>
   <main>
     <a class="back" href="index.html">← 回首頁</a>
     <section class="page" style="--accent:#a78bfa">
-      <p class="tag">Routing Problem</p>
-      <h1>路線優化</h1>
-      <p class="hero-copy">這次做成可改的 VRP 沙盤。先改「幾台車、幾個配送點、分配策略」，再看地圖和每台車路線如何變化。這是教學模擬，不是真正地圖最短路。</p>
+      <p class="tag">M11 Demo6</p>
+      <h1>出車路線</h1>
+      <p class="hero-copy">依照課程檔 `M11 Demo6 路線優化（配送點_車輛_優化路線）` 重寫。這裡的假資料是 15 個配送點、2 台車、重量限制、時間窗與一份優化路線範例。</p>
 
-      <div class="control-panel">
-        <div class="control">
-          <b>台車數</b>
-          <div class="seg" data-control="vehicles">
-            <button type="button" data-value="2">2</button>
-            <button type="button" data-value="3" class="active">3</button>
-            <button type="button" data-value="4">4</button>
-          </div>
-        </div>
-
-        <div class="control">
-          <b>配送點</b>
-          <div class="seg" data-control="points">
-            <button type="button" data-value="6">6</button>
-            <button type="button" data-value="9" class="active">9</button>
-            <button type="button" data-value="12">12</button>
-          </div>
-        </div>
-
-        <div class="control">
-          <b>分配策略</b>
-          <div class="seg" data-control="strategy">
-            <button type="button" data-value="zone" class="active">區域</button>
-            <button type="button" data-value="balance">平均</button>
-            <button type="button" data-value="priority">急件</button>
-          </div>
-        </div>
+      <div class="metric-row">
+        <div class="metric"><strong>15</strong><span>配送點</span></div>
+        <div class="metric"><strong>2</strong><span>車輛</span></div>
+        <div class="metric"><strong>740/800</strong><span>車A 載重 kg</span></div>
+        <div class="metric"><strong>490/500</strong><span>車B 載重 kg</span></div>
       </div>
 
       <div class="route-demo">
         <div class="map-panel">
-          <svg id="routeMap" class="route-map" viewBox="0 0 760 520" role="img" aria-label="可改的路線問題沙盤"></svg>
-          <div class="route-controls" style="padding:14px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap">
-            <button class="route-button primary" id="generate" type="button">重新產生路線</button>
-            <button class="route-button" id="shuffle" type="button">換一組點位</button>
+          <svg id="routeMap" class="route-map" viewBox="0 0 760 520" role="img" aria-label="Demo6 兩台車十五配送點路線"></svg>
+          <div class="toggle-row">
+            <button class="route-button active" data-mode="sample" type="button">課程範例路線</button>
+            <button class="route-button" data-mode="time" type="button">時間窗優先</button>
+            <button class="route-button" data-mode="load" type="button">載重均衡</button>
           </div>
         </div>
 
         <div id="vehicleStack" class="vehicle-stack"></div>
       </div>
 
-      <div class="legend">
-        <div class="legend-item"><b>你改的是問題</b><span>台車數、配送點數、分配策略一變，路線圖就會跟著重畫。</span></div>
-        <div class="legend-item"><b>LLM 做草稿</b><span>適合整理資料、分組、說明風險，但不保證真的是最短路。</span></div>
-        <div class="legend-item"><b>演算法做最佳化</b><span>正式版要接 OR-Tools、Google Routes 或 Mapbox 才能真的算距離。</span></div>
+      <div class="panel wide" style="margin-top:16px">
+        <h2>配送點資料長這樣</h2>
+        <div id="deliveryList" class="delivery-list"></div>
       </div>
 
-      <div class="panel wide" style="margin-top:16px">
-        <h2>目前 Prompt 草稿</h2>
-        <pre id="promptBox" class="codebox"></pre>
+      <div class="grid">
+        <div class="panel">
+          <h2>AI 做什麼</h2>
+          <p>讀取配送點、重量、時間窗、備註，把問題整理成「哪台車跑哪些點」的草稿，並解釋為什麼這樣排。</p>
+        </div>
+        <div class="panel">
+          <h2>演算法做什麼</h2>
+          <p>正式版要用 OR-Tools / Google Routes / Mapbox 真的計算距離、時間、容量與路線順序。LLM 不該自己假裝算最短路。</p>
+        </div>
       </div>
     </section>
   </main>
 
   <script>
-    const colors = ["#22d3ee", "#a3e635", "#fb7185", "#fbbf24"];
-    const names = ["Camden", "Islington", "Shoreditch", "Hackney", "Stratford", "Greenwich", "Brixton", "Chelsea", "Ealing", "Wembley", "Fulham", "Canary Wharf"];
-    let state = { vehicles: 3, points: 9, strategy: "zone", seed: 0 };
-
-    const basePoints = [
-      [210, 140], [130, 260], [270, 365], [420, 105],
-      [560, 165], [620, 330], [500, 420], [310, 445],
-      [165, 430], [120, 105], [610, 80], [690, 250]
+    const points = [
+      ["D01","誠品信義店","信義","09:00-12:00",80,210,180],["D02","三創生活園區","中正","09:00-18:00",45,260,310],
+      ["D03","台北101辦公大樓","信義","13:00-17:00",140,245,210],["D04","南港軟體園區","南港","09:00-12:00",60,520,185],
+      ["D05","饒河夜市商家","松山","14:00-18:00",35,435,245],["D06","微風南山","信義","10:00-16:00",110,230,245],
+      ["D07","松山機場貨運站","松山","08:00-11:00",180,465,135],["D08","中山地下街店面","中山","11:00-15:00",60,330,170],
+      ["D09","大稻埕迪化街","大同","09:00-13:00",45,270,140],["D10","圓山花博","中山","10:00-16:00",65,340,110],
+      ["D11","公館商圈","中正","12:00-18:00",50,285,385],["D12","內湖科技園區","內湖","09:00-12:00",160,610,115],
+      ["D13","西門町商圈","萬華","13:00-19:00",40,210,330],["D14","松菸文創園區","信義","10:00-17:00",70,300,230],
+      ["D15","南港車站","南港","09:00-18:00",90,565,235]
     ];
-
-    function variedPoints() {
-      return basePoints.slice(0, state.points).map(([x, y], i) => {
-        const offset = ((state.seed + i * 37) % 31) - 15;
-        return { id: `P${i + 1}`, name: names[i], x: x + offset, y: y - offset };
-      });
-    }
-
-    function assign(points) {
-      const groups = Array.from({ length: state.vehicles }, () => []);
-      points.forEach((point, index) => {
-        let vehicle = 0;
-        if (state.strategy === "balance") vehicle = index % state.vehicles;
-        if (state.strategy === "zone") vehicle = Math.min(state.vehicles - 1, Math.floor(index / Math.ceil(points.length / state.vehicles)));
-        if (state.strategy === "priority") vehicle = index < state.vehicles ? index : (index + 1) % state.vehicles;
-        groups[vehicle].push(point);
-      });
-      return groups;
-    }
-
-    function pathFor(points) {
-      const hub = "M380 260";
-      return `${hub} ${points.map((p) => `L${p.x} ${p.y}`).join(" ")} L380 260`;
-    }
-
-    function render() {
-      const points = variedPoints();
-      const groups = assign(points);
+    const plans = {
+      sample: [["D07","D12","D15","D04","D03","D06"],["D01","D14","D08","D09","D10","D05","D02","D11","D13"]],
+      time: [["D07","D12","D04","D01","D09","D10","D08"],["D06","D14","D03","D11","D05","D13","D02","D15"]],
+      load: [["D07","D03","D06","D15","D08","D11"],["D12","D01","D14","D04","D10","D02","D09","D13","D05"]]
+    };
+    const vehicles = [{name:"車A", type:"3.5噸貨車", cap:800, color:"#22d3ee"}, {name:"車B", type:"1噸小貨車", cap:500, color:"#a3e635"}];
+    let mode = "sample";
+    const byId = Object.fromEntries(points.map(p => [p[0], p]));
+    function path(ids){ return "M380 285 " + ids.map(id => `L${byId[id][5]} ${byId[id][6]}`).join(" ") + " L380 285"; }
+    function render(){
       const svg = document.getElementById("routeMap");
       svg.innerHTML = "";
-
-      groups.forEach((group, i) => {
-        if (!group.length) return;
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", pathFor(group));
-        path.setAttribute("class", "route-line");
-        path.setAttribute("stroke", colors[i]);
-        svg.appendChild(path);
-      });
-
-      const hub = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      hub.setAttribute("class", "node");
-      hub.setAttribute("transform", "translate(380 260)");
-      hub.innerHTML = `<circle r="34" fill="#f8fbff"></circle><text>H</text><text class="label" x="0" y="55">Hub</text>`;
-      svg.appendChild(hub);
-
-      groups.forEach((group, vehicleIndex) => {
-        group.forEach((point) => {
-          const node = document.createElementNS("http://www.w3.org/2000/svg", "g");
-          node.setAttribute("class", "node");
-          node.setAttribute("transform", `translate(${point.x} ${point.y})`);
-          node.innerHTML = `<circle r="25" fill="${colors[vehicleIndex]}"></circle><text>${point.id}</text><text class="label" x="0" y="${point.y < 150 ? 44 : -38}">${point.name}</text>`;
-          svg.appendChild(node);
-        });
-      });
-
-      document.getElementById("vehicleStack").innerHTML = groups.map((group, i) => {
-        const seq = group.map((p) => p.id).join(" → ");
-        const risk = state.strategy === "priority"
-          ? "急件優先：前幾點先分給不同車，降低等待時間。"
-          : state.strategy === "balance"
-            ? "平均分配：每台車站點數接近，但可能跨區跑比較遠。"
-            : "區域分配：同區集中，路線好懂，但車輛負載可能不平均。";
-        return `<div class="vehicle-card" style="--van:${colors[i]}">
-          <div class="vehicle-head">
-            <span class="vehicle-name"><span class="dot"></span>Van ${String.fromCharCode(65 + i)}</span>
-            <span class="route-pill">${group.length} stops</span>
-          </div>
-          <div class="route-seq">Hub${seq ? " → " + seq : ""} → Hub</div>
-          <div class="risk"><strong>提醒：</strong>${risk}</div>
-        </div>`;
-      }).join("");
-
-      document.getElementById("promptBox").textContent =
-`你是物流排程助理。
-請把 ${state.points} 個配送點分給 ${state.vehicles} 台車。
-分配策略：${state.strategy === "zone" ? "同區集中" : state.strategy === "balance" ? "平均站點數" : "急件優先"}。
-輸出：
-1. 每台車的站點順序
-2. 為什麼這樣分
-3. 哪些車可能超時、超載或跨區
-4. 哪些點需要人工確認`;
+      plans[mode].forEach((ids,i)=>{ const p=document.createElementNS("http://www.w3.org/2000/svg","path"); p.setAttribute("d",path(ids)); p.setAttribute("class","route-line"); p.setAttribute("stroke",vehicles[i].color); svg.appendChild(p); });
+      const hub=document.createElementNS("http://www.w3.org/2000/svg","g"); hub.setAttribute("class","node"); hub.setAttribute("transform","translate(380 285)"); hub.innerHTML='<circle r="34" fill="#f8fbff"></circle><text>H</text><text class="label" x="0" y="55">公司倉庫</text>'; svg.appendChild(hub);
+      points.forEach(pt=>{ const owner=plans[mode].findIndex(ids=>ids.includes(pt[0])); const g=document.createElementNS("http://www.w3.org/2000/svg","g"); g.setAttribute("class","node"); g.setAttribute("transform",`translate(${pt[5]} ${pt[6]})`); g.innerHTML=`<circle r="24" fill="${vehicles[owner].color}"></circle><text>${pt[0].replace("D","")}</text><text class="label" x="0" y="${pt[6] < 150 ? 42 : -36}">${pt[2]}</text>`; svg.appendChild(g); });
+      document.getElementById("vehicleStack").innerHTML = plans[mode].map((ids,i)=>{ const total=ids.reduce((s,id)=>s+byId[id][4],0); const names=ids.map(id=>`${id} ${byId[id][1]}`).join(" → "); return `<div class="vehicle-card" style="--van:${vehicles[i].color};--load:${Math.round(total/vehicles[i].cap*100)}%"><div class="vehicle-head"><span class="vehicle-name"><span class="dot"></span>${vehicles[i].name} ${vehicles[i].type}</span><span class="route-pill">${ids.length} stops</span></div><div class="route-seq">倉庫 → ${names} → 倉庫</div><div class="loadbar"><span></span></div><div class="risk"><strong>載重：</strong>${total}kg / ${vehicles[i].cap}kg。${mode==="sample" ? "這是課程檔的優化路線範例。" : "這是前端模擬的替代策略，用來比較不同排法。"}</div></div>`; }).join("");
     }
-
-    document.querySelectorAll("[data-control]").forEach((group) => {
-      group.querySelectorAll("button").forEach((button) => {
-        button.addEventListener("click", () => {
-          group.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
-          button.classList.add("active");
-          const key = group.dataset.control;
-          state[key] = key === "strategy" ? button.dataset.value : Number(button.dataset.value);
-          render();
-        });
-      });
-    });
-
-    document.getElementById("generate").addEventListener("click", render);
-    document.getElementById("shuffle").addEventListener("click", () => {
-      state.seed += 11;
-      render();
-    });
-
+    document.getElementById("deliveryList").innerHTML = points.map(p=>`<div class="delivery"><b>${p[0]} ${p[1]}</b><span>${p[2]}｜${p[3]}｜${p[4]}kg</span></div>`).join("");
+    document.querySelectorAll("[data-mode]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("[data-mode]").forEach(b=>b.classList.remove("active"));btn.classList.add("active");mode=btn.dataset.mode;render();}));
     render();
   </script>
 </body>
