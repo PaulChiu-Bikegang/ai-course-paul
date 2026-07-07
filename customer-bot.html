@@ -503,6 +503,7 @@
     let offDuty = false;
     let lastUserText = "";
     let lastTicket = null;
+    let turnCount = 0;
     let buddyMode = false;
     const defaultWebhookUrl = "https://ntfy.sh/velora-cycle-demo-paul-20260707";
     const messages = document.querySelector("#messages");
@@ -531,10 +532,13 @@
       }
 
       const normalized = text.toUpperCase();
+      if (turnCount >= 2 && isHumanFrustration(text)) {
+        return handoff("我看得出來你不是要再聽模板。我先幫你開接手單，保留前面的對話脈絡；你不用重講一次。若方便，再補訂單號、照片或物流截圖。");
+      }
       if (buddyMode && !isClassQuestion(text)) {
         return buddyAnswer(text);
       }
-      if (/真人|人工|客服人員|找人|叫人|轉接|接手/i.test(text)) {
+      if (isHumanRequest(text)) {
         return handoff("我先幫你接到真人客服流程。請提供：訂單號、收件姓名、問題摘要，以及照片或物流截圖。");
       }
       if (isConfusedFollowUp(text)) {
@@ -568,7 +572,13 @@
       if (/沒收到|遺失|送達/i.test(text)) {
         return handoff("包裹顯示送達但未收到屬於物流查件情境。請提供訂單號與收件姓名，我會轉真人客服協助查詢。");
       }
-      return "我可以協助查詢訂單、商品規格、出貨、退換貨與海外物流。請提供訂單號，或描述你想確認的零件與車款。";
+      return templateAnswer(text);
+    }
+
+    function templateAnswer(text) {
+      return turnCount <= 2
+        ? "我可以協助查詢訂單、商品規格、出貨、退換貨與海外物流。請提供訂單號，或描述你想確認的零件與車款。"
+        : "我還在，不是重開一個機器人。若你要我接手處理，直接說「找老板 / 找真人 / 這不對」，我會把前面脈絡一起建單。";
     }
 
     function handoff(message) {
@@ -614,6 +624,7 @@
     }
 
     function ask(text) {
+      turnCount += 1;
       lastUserText = text;
       addMessage("user", text);
       if (needsHandoff(text)) {
@@ -630,10 +641,19 @@
     function needsHandoff(text) {
       const normalized = text.toUpperCase();
       const orderId = Object.keys(orders).find(id => normalized.includes(id));
-      return /真人|人工|客服人員|找人|叫人|轉接|接手|未收到|遺失|投訴|退款|補償|瑕疵|故障|取消|更改地址|齒盤|BCD|規格|相容|BROMPTON|車款|退|換|買錯|送達/i.test(text)
+      return isHumanRequest(text)
+        || /未收到|遺失|投訴|退款|補償|瑕疵|故障|取消|更改地址|齒盤|BCD|規格|相容|BROMPTON|車款|退|換|買錯|送達/i.test(text)
         || isComplaint(text)
         || orderId === "VC-260707-1006"
         || orderId === "VC-260707-1003";
+    }
+
+    function isHumanRequest(text) {
+      return /真人|人工|客服人員|找人|叫人|轉接|接手|老闆|老板|主管|經理|負責人|上級|manager|boss|supervisor|human|agent/i.test(text);
+    }
+
+    function isHumanFrustration(text) {
+      return isHumanRequest(text) || isComplaint(text) || isConfusedFollowUp(text) || /不對|不是|別鬧|算了|夠了|你不懂|聽不懂|又來|一直|鬼打牆|模板|機器人/i.test(text);
     }
 
     function isComplaint(text) {
