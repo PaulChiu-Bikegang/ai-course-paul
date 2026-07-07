@@ -532,6 +532,9 @@
       if (/真人|人工|客服人員|找人|叫人|轉接|接手/i.test(text)) {
         return handoff("我先幫你接到真人客服流程。請提供：訂單號、收件姓名、問題摘要，以及照片或物流截圖。");
       }
+      if (isComplaint(text)) {
+        return handoff("很抱歉讓你有這樣的體驗，我先幫你建立客訴接手單。請先保留商品、包裝與照片，不需要重複說明；真人客服會依你剛才的留言優先確認。若方便，請再補上訂單號或購買姓名。");
+      }
       const orderId = Object.keys(orders).find(id => normalized.includes(id));
       if (orderId) {
         const order = orders[orderId];
@@ -601,8 +604,13 @@
       const normalized = text.toUpperCase();
       const orderId = Object.keys(orders).find(id => normalized.includes(id));
       return /真人|人工|客服人員|找人|叫人|轉接|接手|未收到|遺失|投訴|退款|補償|瑕疵|故障|取消|更改地址|齒盤|BCD|規格|相容|BROMPTON|車款|退|換|買錯|送達/i.test(text)
+        || isComplaint(text)
         || orderId === "VC-260707-1006"
         || orderId === "VC-260707-1003";
+    }
+
+    function isComplaint(text) {
+      return /爛|壞|氣死|火大|爆炸|垃圾|騙|客訴|投訴|糟糕|失望|不爽|太扯|破門|fuck|shit|angry|terrible|awful/i.test(text);
     }
 
     function createTicket(message) {
