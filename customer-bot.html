@@ -503,6 +503,7 @@
     let offDuty = false;
     let lastUserText = "";
     let lastTicket = null;
+    let buddyMode = false;
     const defaultWebhookUrl = "https://ntfy.sh/velora-cycle-demo-paul-20260707";
     const messages = document.querySelector("#messages");
     const input = document.querySelector("#input");
@@ -530,6 +531,9 @@
       }
 
       const normalized = text.toUpperCase();
+      if (buddyMode && !isClassQuestion(text)) {
+        return buddyAnswer(text);
+      }
       if (/真人|人工|客服人員|找人|叫人|轉接|接手/i.test(text)) {
         return handoff("我先幫你接到真人客服流程。請提供：訂單號、收件姓名、問題摘要，以及照片或物流截圖。");
       }
@@ -570,9 +574,25 @@
     function handoff(message) {
       const ticket = createTicket(message);
       lastTicket = ticket;
+      buddyMode = true;
       sendTicket(ticket);
       const status = "已建立接手單，並送到 demo 通知台。";
-      return `<strong>等待真人處理</strong>\n${message}\n\n${status}\n接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
+      return `<strong>Buddy 接手模式</strong>\n好，我接住了，不讓你繼續被模板繞圈圈。\n\n${message}\n\n${status}\n接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
+    }
+
+    function buddyAnswer(text) {
+      if (lastTicket && isConfusedFollowUp(text)) {
+        return `我懂，剛剛那段如果看起來像機器話術，先幫它翻成人話：\n\n我已經幫你開單：${lastTicket.id}\n狀態看左側 Demo Inbox；顯示「已送出通知」就是已經丟到 demo 值班台。\n\n你現在不用再重打一遍，補訂單號、照片或物流截圖就好。`;
+      }
+      if (lastTicket && /等多久|多久|進度|處理/i.test(text)) {
+        return `這張 ${lastTicket.id} 已經在等待真人處理。Demo 版不保證 SLA；正式版會接 n8n/Zapier 設定提醒與逾時升級。先別急著破門，我幫你把門鈴按下去了。`;
+      }
+      if (lastTicket && /訂單|照片|截圖|姓名/i.test(text)) {
+        return `收到，我會把這些補充併到 ${lastTicket.id} 的接手脈絡裡。Demo 版不保存真個資；正式版才會寫進客服系統。`;
+      }
+      return lastTicket
+        ? `我在。這題已經不是一般 FAQ，我會維持接手狀態。你可以補訂單號、照片、物流截圖；其他我不會亂猜，也不會承諾退款或補寄。`
+        : "我在。你可以直接說問題，若涉及客訴、物流、退款或規格不確定，我會切到接手模式。";
     }
 
     function classAnswer(text) {
@@ -622,6 +642,10 @@
 
     function isConfusedFollowUp(text) {
       return /^\s*[?？!！.。…\s]{2,}\s*$/.test(text) || /什麼意思|看不懂|所以呢|然後呢|蛤|啥|what|why/i.test(text);
+    }
+
+    function isClassQuestion(text) {
+      return /同學|課堂|notebooklm|客服手冊|知識庫|gpt|demo|怎麼做|為什麼/i.test(text);
     }
 
     function createTicket(message) {
