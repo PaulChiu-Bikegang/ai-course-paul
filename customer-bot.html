@@ -286,6 +286,51 @@
 
     .bot .bubble strong { color: #a7f3d0; }
 
+    .handoff-loader {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #a7f3d0;
+      font-weight: 800;
+    }
+
+    .funnel {
+      position: relative;
+      width: 34px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+
+    .funnel::before,
+    .funnel::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      animation: funnelPulse 900ms ease-in-out infinite;
+    }
+
+    .funnel::before {
+      top: 3px;
+      height: 8px;
+      clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%);
+    }
+
+    .funnel::after {
+      left: 13px;
+      right: 13px;
+      bottom: 3px;
+      height: 14px;
+      animation-delay: 160ms;
+    }
+
+    @keyframes funnelPulse {
+      0%, 100% { opacity: .45; transform: translateY(0) scaleX(.92); }
+      50% { opacity: 1; transform: translateY(2px) scaleX(1); }
+    }
+
     .composer {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -475,6 +520,7 @@
       wrap.appendChild(bubble);
       messages.appendChild(wrap);
       messages.scrollTop = messages.scrollHeight;
+      return wrap;
     }
 
     function answer(text) {
@@ -540,7 +586,23 @@
     function ask(text) {
       lastUserText = text;
       addMessage("user", text);
+      if (needsHandoff(text)) {
+        const pending = addMessage("bot", `<span class="handoff-loader"><span class="funnel"></span>正在建立接手單...</span>`);
+        window.setTimeout(() => {
+          pending.remove();
+          addMessage("bot", answer(text));
+        }, 850);
+        return;
+      }
       window.setTimeout(() => addMessage("bot", answer(text)), 260);
+    }
+
+    function needsHandoff(text) {
+      const normalized = text.toUpperCase();
+      const orderId = Object.keys(orders).find(id => normalized.includes(id));
+      return /真人|人工|客服人員|找人|叫人|轉接|接手|未收到|遺失|投訴|退款|補償|瑕疵|故障|取消|更改地址|齒盤|BCD|規格|相容|BROMPTON|車款|退|換|買錯|送達/i.test(text)
+        || orderId === "VC-260707-1006"
+        || orderId === "VC-260707-1003";
     }
 
     function createTicket(message) {
