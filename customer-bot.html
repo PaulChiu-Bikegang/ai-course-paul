@@ -409,6 +409,9 @@
       }
 
       const normalized = text.toUpperCase();
+      if (/真人|人工|客服人員|找人|叫人|轉接|接手/i.test(text)) {
+        return handoff("我先幫你接到真人客服流程。請提供：訂單號、收件姓名、問題摘要，以及照片或物流截圖。");
+      }
       const orderId = Object.keys(orders).find(id => normalized.includes(id));
       if (orderId) {
         const order = orders[orderId];
