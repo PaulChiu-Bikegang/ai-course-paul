@@ -326,7 +326,7 @@
         </div>
         <div class="card">
           <b>客服規則</b>
-          <div class="small">不編造庫存、交期、保固與退款。涉及爭議、物流遺失、規格不確定時轉真人。</div>
+          <div class="small">不編造庫存、交期、保固與退款。轉真人時由 AI 助教接手整理，但不碰真資料。</div>
         </div>
       </section>
 
@@ -335,9 +335,10 @@
         <button class="chip" data-prompt="VC-260707-1006 顯示送達但我沒收到">包裹未收到</button>
         <button class="chip" data-prompt="我不確定 Brompton 齒盤規格，要怎麼確認？">規格確認</button>
         <button class="chip" data-prompt="我買錯規格，可以退貨嗎？">退貨問題</button>
+        <button class="chip" data-prompt="同學提問：這個客服機器人為什麼要上傳客服手冊？">同學提問</button>
       </section>
 
-      <div class="hint">這是無 API、無 token 的前端模擬版。適合課堂展示流程；正式版可改接 GPT API / n8n / CRM。</div>
+      <div class="hint">進階版：轉真人客服由 AI 助教模擬接手；同學提問最多 5 題後禮貌下班。</div>
     </aside>
 
     <section class="chat" aria-label="客服聊天">
@@ -385,6 +386,8 @@
       }
     };
 
+    let classQuestionCount = 0;
+    let offDuty = false;
     const messages = document.querySelector("#messages");
     const input = document.querySelector("#input");
     const form = document.querySelector("#composer");
@@ -401,25 +404,57 @@
     }
 
     function answer(text) {
+      if (offDuty) {
+        return "客服小助理已經下班充電中。這頁還能看流程，但新的課堂提問請交給 Paul 或老師接棒。";
+      }
+
       const normalized = text.toUpperCase();
       const orderId = Object.keys(orders).find(id => normalized.includes(id));
       if (orderId) {
         const order = orders[orderId];
+        if (/未收到|遺失|投訴|退款|補償|瑕疵|故障|取消|更改地址|真人|客服/i.test(text) || orderId === "VC-260707-1006" || orderId === "VC-260707-1003") {
+          return handoff(`${order.reply}\n\n我先接到真人客服流程。請提供：訂單號、收件姓名、問題照片或物流截圖。我會整理重點給客服確認。`);
+        }
         return `<strong>${order.status}</strong>\n${order.reply}\n\n下一步：若要更改地址、取消或申訴，請提供收件姓名與聯絡方式，我會轉真人客服。`;
       }
+      if (/同學|課堂|為什麼|怎麼做|notebooklm|客服手冊|知識庫|轉真人|gpt/i.test(text)) {
+        return classAnswer(text);
+      }
       if (/齒盤|BCD|規格|相容|BROMPTON|車款/i.test(text)) {
-        return "請先確認車款年份、BCD 規格、齒數、曲柄品牌與鏈條速別。若不確定，請上傳現有零件正反面照片，我會轉真人客服判斷。";
+        return handoff("請先確認車款年份、BCD 規格、齒數、曲柄品牌與鏈條速別。若不確定，請提供現有零件正反面照片，我會轉真人客服判斷。");
       }
       if (/退|換|退款|買錯/i.test(text)) {
-        return "未安裝、未使用、包裝與配件完整時，可申請退貨。若已有安裝痕跡、刮痕、缺件或客製品，需轉真人客服確認。";
+        return handoff("未安裝、未使用、包裝與配件完整時，可申請退貨。若已有安裝痕跡、刮痕、缺件或客製品，需由真人客服確認。");
       }
       if (/關稅|海外|清關|稅/i.test(text)) {
         return "海外訂單可能產生關稅、進口稅或清關費，通常由買家依當地規定負擔。實際金額需以海關或物流通知為準。";
       }
       if (/沒收到|遺失|送達/i.test(text)) {
-        return "包裹顯示送達但未收到屬於物流查件情境。請提供訂單號與收件姓名，我會轉真人客服協助查詢。";
+        return handoff("包裹顯示送達但未收到屬於物流查件情境。請提供訂單號與收件姓名，我會轉真人客服協助查詢。");
       }
       return "我可以協助查詢訂單、商品規格、出貨、退換貨與海外物流。請提供訂單號，或描述你想確認的零件與車款。";
+    }
+
+    function handoff(message) {
+      return `<strong>真人客服接手模式</strong>\n${message}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
+    }
+
+    function classAnswer(text) {
+      classQuestionCount += 1;
+      if (classQuestionCount >= 5) {
+        offDuty = true;
+        return "第 5 題收到。客服小助理今天的課堂體驗額度用完啦，我先去喝水充電，後續請找 Paul 或老師接棒。";
+      }
+      if (/客服手冊|知識庫|notebooklm/i.test(text)) {
+        return `第 ${classQuestionCount}/5 題：客服手冊是 AI 的依據。NotebookLM 先把公司資料整理成 PDF，GPT 再用它回答，才不會靠想像亂講。`;
+      }
+      if (/轉真人/i.test(text)) {
+        return `第 ${classQuestionCount}/5 題：轉真人不是失敗，是風險控管。退款、物流遺失、保固、安全疑慮都需要真人確認。`;
+      }
+      if (/gpt|機器人/i.test(text)) {
+        return `第 ${classQuestionCount}/5 題：這個 demo 模擬 GPT 客服流程；正式版可接 GPT API、n8n、CRM 或訂單系統。`;
+      }
+      return `第 ${classQuestionCount}/5 題：我只回答和本客服機器人 demo 有關的問題，不聊天南地北，也不幫寫程式。`;
     }
 
     function ask(text) {
@@ -439,7 +474,7 @@
       button.addEventListener("click", () => ask(button.dataset.prompt));
     });
 
-    addMessage("bot", "您好，我是 <strong>Velora Cycle</strong> 的 AI 客服助理。可以查詢假訂單、回答規格與退換貨問題。試試輸入：VC-260707-1001");
+    addMessage("bot", "您好，我是 <strong>Velora Cycle</strong> 的 AI 客服助理。可以查詢假訂單、回答規格與退換貨問題；遇到高風險情境會由 AI 助教模擬接手。試試輸入：VC-260707-1006");
   </script>
 </body>
 </html>
