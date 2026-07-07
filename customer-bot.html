@@ -502,6 +502,7 @@
     let classQuestionCount = 0;
     let offDuty = false;
     let lastUserText = "";
+    let lastTicket = null;
     const defaultWebhookUrl = "https://ntfy.sh/velora-cycle-demo-paul-20260707";
     const messages = document.querySelector("#messages");
     const input = document.querySelector("#input");
@@ -531,6 +532,11 @@
       const normalized = text.toUpperCase();
       if (/真人|人工|客服人員|找人|叫人|轉接|接手/i.test(text)) {
         return handoff("我先幫你接到真人客服流程。請提供：訂單號、收件姓名、問題摘要，以及照片或物流截圖。");
+      }
+      if (isConfusedFollowUp(text)) {
+        return lastTicket
+          ? `我知道你在問進度。剛剛已建立接手單：${lastTicket.id}。\n狀態會在左側 Demo Inbox 顯示；如果是「已送出通知」，代表已送到 demo 通知台，等待真人處理。\n\n你現在不用重複描述問題，補上訂單號或照片即可。`
+          : "我可能沒有說清楚。請直接描述問題，或輸入「找真人」，我會建立接手單。";
       }
       if (isComplaint(text)) {
         return handoff("很抱歉讓你有這樣的體驗，我先幫你建立客訴接手單。請先保留商品、包裝與照片，不需要重複說明；真人客服會依你剛才的留言優先確認。若方便，請再補上訂單號或購買姓名。");
@@ -563,6 +569,7 @@
 
     function handoff(message) {
       const ticket = createTicket(message);
+      lastTicket = ticket;
       sendTicket(ticket);
       const status = "已建立接手單，並送到 demo 通知台。";
       return `<strong>等待真人處理</strong>\n${message}\n\n${status}\n接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
@@ -611,6 +618,10 @@
 
     function isComplaint(text) {
       return /爛|壞|氣死|火大|爆炸|垃圾|騙|客訴|投訴|糟糕|失望|不爽|太扯|破門|fuck|shit|angry|terrible|awful/i.test(text);
+    }
+
+    function isConfusedFollowUp(text) {
+      return /^\s*[?？!！.。…\s]{2,}\s*$/.test(text) || /什麼意思|看不懂|所以呢|然後呢|蛤|啥|what|why/i.test(text);
     }
 
     function createTicket(message) {
