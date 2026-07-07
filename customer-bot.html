@@ -504,7 +504,7 @@
     let lastUserText = "";
     let lastTicket = null;
     let turnCount = 0;
-    let buddyMode = false;
+    let assistedMode = false;
     const defaultWebhookUrl = "https://ntfy.sh/velora-cycle-demo-paul-20260707";
     const messages = document.querySelector("#messages");
     const input = document.querySelector("#input");
@@ -535,8 +535,8 @@
       if (turnCount >= 2 && isHumanFrustration(text)) {
         return handoff("我看得出來你不是要再聽模板。我先幫你開接手單，保留前面的對話脈絡；你不用重講一次。若方便，再補訂單號、照片或物流截圖。");
       }
-      if (buddyMode && !isClassQuestion(text)) {
-        return buddyAnswer(text);
+      if (assistedMode && !isClassQuestion(text)) {
+        return assistedAnswer(text);
       }
       if (isHumanRequest(text)) {
         return handoff("我先幫你接到真人客服流程。請提供：訂單號、收件姓名、問題摘要，以及照片或物流截圖。");
@@ -584,15 +584,15 @@
     function handoff(message) {
       const ticket = createTicket(message);
       lastTicket = ticket;
-      buddyMode = true;
+      assistedMode = true;
       sendTicket(ticket);
       const status = "已建立接手單，並送到 demo 通知台。";
-      return `<strong>Buddy 接手模式</strong>\n好，我接住了，不讓你繼續被模板繞圈圈。\n\n${message}\n\n${status}\n接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
+      return `<strong>我在，幫你接住這件事</strong>\n剛才先照客服流程收資料；不是換人，也不是重開對話。\n\n${message}\n\n${status}\n接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
     }
 
-    function buddyAnswer(text) {
+    function assistedAnswer(text) {
       if (lastTicket && isConfusedFollowUp(text)) {
-        return `我懂，剛剛那段如果看起來像機器話術，先幫它翻成人話：\n\n我已經幫你開單：${lastTicket.id}\n狀態看左側 Demo Inbox；顯示「已送出通知」就是已經丟到 demo 值班台。\n\n你現在不用再重打一遍，補訂單號、照片或物流截圖就好。`;
+        return `我懂，剛剛那段如果看起來像機器話術，先幫它翻成人話：\n\n我一直在，前面只是先照客服流程收資料。\n我已經幫你開單：${lastTicket.id}\n狀態看左側 Demo Inbox；顯示「已送出通知」就是已經丟到 demo 值班台。\n\n你現在不用再重打一遍，補訂單號、照片或物流截圖就好。`;
       }
       if (lastTicket && /等多久|多久|進度|處理/i.test(text)) {
         return `這張 ${lastTicket.id} 已經在等待真人處理。Demo 版不保證 SLA；正式版會接 n8n/Zapier 設定提醒與逾時升級。先別急著破門，我幫你把門鈴按下去了。`;
