@@ -200,9 +200,10 @@
     }
 
     .chat {
-      min-height: calc(100vh - 36px);
+      align-self: start;
+      min-height: auto;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto minmax(300px, 430px) auto;
     }
 
     .topbar {
@@ -257,6 +258,8 @@
 
     .messages {
       overflow-y: auto;
+      min-height: 300px;
+      max-height: 430px;
       padding: 22px;
       scroll-behavior: smooth;
     }
@@ -390,7 +393,7 @@
       }
 
       .chat {
-        min-height: 70vh;
+        grid-template-rows: auto minmax(260px, 52vh) auto;
       }
 
       .brand {
@@ -402,6 +405,8 @@
       }
 
       .messages {
+        min-height: 260px;
+        max-height: 52vh;
         padding: 16px;
       }
     }
@@ -463,7 +468,7 @@
             <span>知識庫：客服手冊 + 假訂單狀態表</span>
           </div>
         </div>
-        <div class="badge">Demo Online</div>
+        <div class="badge">Demo v7</div>
       </header>
 
       <div id="messages" class="messages"></div>
@@ -597,6 +602,11 @@
       if (lastTicket && /等多久|多久|進度|處理/i.test(text)) {
         return `這張 ${lastTicket.id} 已經在等待真人處理。Demo 版不保證 SLA；正式版會接 n8n/Zapier 設定提醒與逾時升級。先別急著破門，我幫你把門鈴按下去了。`;
       }
+      if (/有人|回話|回覆|回應|收到|值班|在線|來了嗎|看到嗎|接了嗎/i.test(text)) {
+        return lastTicket
+          ? `有沒有「真人已回覆」，要看值班通知台；我這邊能確定的是：${lastTicket.id} 已送出通知。\n\n我不是要騙你說老闆本人已經坐下來打字。現在狀態是：我在前台接著你，通知台已響，等值班端回。`
+          : "目前還沒有接手單。你如果要找人，我會先建單並送到值班通知台。";
+      }
       if (/你是誰|誰|真人還是|是人|是ai|ai嗎|機器人|人嗎/i.test(text)) {
         return lastTicket
           ? `我是 Vela，前面先照客服 SOP 裝乖的那位。現在我不裝了：我不是假裝真人，也不是公司老闆本人；我已經把你的狀況丟到值班通知台，接手單是 ${lastTicket.id}。\n\n你要找真的人，我能做的正確動作就是：保留脈絡、建單、通知、不要亂承諾。`
@@ -611,7 +621,7 @@
         return `收到，我會把這些補充併到 ${lastTicket.id} 的接手脈絡裡。Demo 版不保存真個資；正式版才會寫進客服系統。`;
       }
       return lastTicket
-        ? `我在。先不丟模板了：${lastTicket.id} 已經建立，值班通知也送出。你可以罵，可以問，我會把脈絡留著；但退款、補寄、真實訂單這些我不亂承諾。`
+        ? `我在前台接著你，不再丟一般 FAQ 模板。\n\n目前能確認的是：${lastTicket.id} 已建立，通知已送出。真正的人是否已回覆，要看值班台；我不會假裝有人已經回你。`
         : "我在。你可以直接說問題，若涉及客訴、物流、退款或規格不確定，我會切到接手模式。";
     }
 
