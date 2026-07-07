@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Velora 客服機器人</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #06111f;
+      --ink: #eff6ff;
+      --muted: #a9bad0;
+      --line: rgba(148, 163, 184, .22);
+      --panel: rgba(10, 18, 32, .82);
+      --panel-2: rgba(15, 23, 42, .72);
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --pink: #fb7185;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(34, 211, 238, .18), transparent 28%),
+        radial-gradient(circle at 90% 8%, rgba(251, 113, 133, .13), transparent 25%),
+        linear-gradient(135deg, #06111f 0%, #0b1220 52%, #101827 100%);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .shell {
+      width: min(1180px, 100%);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 18px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    aside, .chat {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .35);
+      overflow: hidden;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 36px);
+    }
+
+    .brand {
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(34, 211, 238, .16), rgba(52, 211, 153, .08));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mark {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #03111d;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .brand p, .small, .hint {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .brand p {
+      margin: 12px 0 0;
+      font-size: 15px;
+    }
+
+    .cards {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+    }
+
+    .card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel-2);
+    }
+
+    .card b {
+      display: block;
+      margin-bottom: 8px;
+      color: #f8fbff;
+      font-size: 14px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 18px 18px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .chip {
+      padding: 9px 11px;
+      border: 1px solid rgba(34, 211, 238, .25);
+      border-radius: 999px;
+      background: rgba(34, 211, 238, .08);
+      color: #cffafe;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .chip:hover {
+      transform: translateY(-2px);
+      background: rgba(34, 211, 238, .16);
+      border-color: rgba(34, 211, 238, .55);
+    }
+
+    .chat {
+      min-height: calc(100vh - 36px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(2, 6, 23, .2);
+    }
+
+    .agent {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: rgba(52, 211, 153, .14);
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .agent b {
+      display: block;
+      font-size: 16px;
+    }
+
+    .agent span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(52, 211, 153, .12);
+      color: #bbf7d0;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .messages {
+      overflow-y: auto;
+      padding: 22px;
+      scroll-behavior: smooth;
+    }
+
+    .msg {
+      display: flex;
+      margin-bottom: 14px;
+    }
+
+    .msg.user { justify-content: flex-end; }
+
+    .bubble {
+      max-width: min(620px, 88%);
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(15, 23, 42, .78);
+      color: #eaf4ff;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .user .bubble {
+      border-color: rgba(34, 211, 238, .32);
+      background: linear-gradient(135deg, rgba(34, 211, 238, .22), rgba(59, 130, 246, .16));
+    }
+
+    .bot .bubble strong { color: #a7f3d0; }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+      background: rgba(2, 6, 23, .28);
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, .52);
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(34, 211, 238, .75);
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, .1);
+    }
+
+    .send {
+      min-width: 104px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #03111d;
+      font-weight: 900;
+      transition: transform .16s ease, filter .16s ease;
+    }
+
+    .send:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .hint {
+      margin-top: auto;
+      padding: 16px 18px 20px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        grid-template-columns: 1fr;
+        padding: 10px;
+      }
+
+      aside, .chat {
+        min-height: auto;
+        border-radius: 20px;
+      }
+
+      .chat {
+        min-height: 70vh;
+      }
+
+      .brand {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .messages {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside>
+      <section class="brand">
+        <div class="mark">V</div>
+        <h1>Velora Cycle<br>客服機器人</h1>
+        <p>課堂展示用假公司。模擬單車零件電商客服：商品規格、訂單狀態、物流、退換貨與真人轉接。</p>
+      </section>
+
+      <section class="cards">
+        <div class="card">
+          <b>假訂單號</b>
+          <div class="small">VC-260707-1001｜待出貨<br>VC-260707-1003｜需確認規格<br>VC-260707-1006｜顯示送達但未收到</div>
+        </div>
+        <div class="card">
+          <b>客服規則</b>
+          <div class="small">不編造庫存、交期、保固與退款。涉及爭議、物流遺失、規格不確定時轉真人。</div>
+        </div>
+      </section>
+
+      <section class="chips" aria-label="快速問題">
+        <button class="chip" data-prompt="我想查詢訂單 VC-260707-1001">查訂單 1001</button>
+        <button class="chip" data-prompt="VC-260707-1006 顯示送達但我沒收到">包裹未收到</button>
+        <button class="chip" data-prompt="我不確定 Brompton 齒盤規格，要怎麼確認？">規格確認</button>
+        <button class="chip" data-prompt="我買錯規格，可以退貨嗎？">退貨問題</button>
+      </section>
+
+      <div class="hint">這是無 API、無 token 的前端模擬版。適合課堂展示流程；正式版可改接 GPT API / n8n / CRM。</div>
+    </aside>
+
+    <section class="chat" aria-label="客服聊天">
+      <header class="topbar">
+        <div class="agent">
+          <div class="avatar">AI</div>
+          <div>
+            <b>Vela｜客服助理</b>
+            <span>知識庫：客服手冊 + 假訂單狀態表</span>
+          </div>
+        </div>
+        <div class="badge">Demo Online</div>
+      </header>
+
+      <div id="messages" class="messages"></div>
+
+      <form id="composer" class="composer">
+        <input id="input" autocomplete="off" placeholder="輸入問題，例如：我想查詢訂單 VC-260707-1003">
+        <button class="send" type="submit">送出</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const orders = {
+      "VC-260707-1001": {
+        status: "已付款，待出貨",
+        logistics: "尚未交寄",
+        reply: "訂單 VC-260707-1001 已付款，正在安排出貨，預計 1-2 個工作天內寄出。"
+      },
+      "VC-260707-1002": {
+        status: "已出貨",
+        logistics: "運送中",
+        reply: "訂單 VC-260707-1002 已出貨，目前運送中；海外清關時間依當地海關為準。"
+      },
+      "VC-260707-1003": {
+        status: "處理中，需人工確認",
+        logistics: "暫停出貨",
+        reply: "訂單 VC-260707-1003 需要確認零件規格。請提供車款年份、現有零件照片與想更換的位置，我會轉真人客服確認。"
+      },
+      "VC-260707-1006": {
+        status: "已出貨",
+        logistics: "物流顯示已送達",
+        reply: "物流顯示 VC-260707-1006 已送達，但你未收到。這屬於查件情境，我會轉真人客服協助向物流確認。"
+      }
+    };
+
+    const messages = document.querySelector("#messages");
+    const input = document.querySelector("#input");
+    const form = document.querySelector("#composer");
+
+    function addMessage(role, text) {
+      const wrap = document.createElement("div");
+      wrap.className = `msg ${role}`;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerHTML = text;
+      wrap.appendChild(bubble);
+      messages.appendChild(wrap);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function answer(text) {
+      const normalized = text.toUpperCase();
+      const orderId = Object.keys(orders).find(id => normalized.includes(id));
+      if (orderId) {
+        const order = orders[orderId];
+        return `<strong>${order.status}</strong>\n${order.reply}\n\n下一步：若要更改地址、取消或申訴，請提供收件姓名與聯絡方式，我會轉真人客服。`;
+      }
+      if (/齒盤|BCD|規格|相容|BROMPTON|車款/i.test(text)) {
+        return "請先確認車款年份、BCD 規格、齒數、曲柄品牌與鏈條速別。若不確定，請上傳現有零件正反面照片，我會轉真人客服判斷。";
+      }
+      if (/退|換|退款|買錯/i.test(text)) {
+        return "未安裝、未使用、包裝與配件完整時，可申請退貨。若已有安裝痕跡、刮痕、缺件或客製品，需轉真人客服確認。";
+      }
+      if (/關稅|海外|清關|稅/i.test(text)) {
+        return "海外訂單可能產生關稅、進口稅或清關費，通常由買家依當地規定負擔。實際金額需以海關或物流通知為準。";
+      }
+      if (/沒收到|遺失|送達/i.test(text)) {
+        return "包裹顯示送達但未收到屬於物流查件情境。請提供訂單號與收件姓名，我會轉真人客服協助查詢。";
+      }
+      return "我可以協助查詢訂單、商品規格、出貨、退換貨與海外物流。請提供訂單號，或描述你想確認的零件與車款。";
+    }
+
+    function ask(text) {
+      addMessage("user", text);
+      window.setTimeout(() => addMessage("bot", answer(text)), 260);
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      ask(text);
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach(button => {
+      button.addEventListener("click", () => ask(button.dataset.prompt));
+    });
+
+    addMessage("bot", "您好，我是 <strong>Velora Cycle</strong> 的 AI 客服助理。可以查詢假訂單、回答規格與退換貨問題。試試輸入：VC-260707-1001");
+  </script>
+</body>
+</html>
