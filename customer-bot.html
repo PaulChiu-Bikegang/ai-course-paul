@@ -181,6 +181,18 @@
       line-height: 1.45;
     }
 
+    .ticket[data-status="sent"] {
+      border-color: rgba(52, 211, 153, .28);
+      background: rgba(52, 211, 153, .1);
+      color: #bbf7d0;
+    }
+
+    .ticket[data-status="failed"] {
+      border-color: rgba(251, 113, 133, .32);
+      background: rgba(251, 113, 133, .1);
+      color: #fecdd3;
+    }
+
     .chip:hover {
       transform: translateY(-2px);
       background: rgba(34, 211, 238, .16);
@@ -370,10 +382,13 @@
         </div>
         <div class="card">
           <b>值班通道</b>
-          <div class="small" id="webhookStatus">未設定 webhook：接手單先存在本機 demo inbox。</div>
+          <div class="small" id="webhookStatus">已啟用公開 demo 通知：接手單會送到 ntfy 測試值班台。</div>
           <div class="webhook-form">
-            <input class="mini-input" id="webhookUrl" placeholder="貼 n8n / Zapier webhook URL">
+            <input class="mini-input" id="webhookUrl" placeholder="可改貼 n8n / Zapier webhook URL">
             <button class="mini-button" id="saveWebhook" type="button">保存</button>
+          </div>
+          <div class="small" style="margin-top:8px">
+            <a href="https://ntfy.sh/velora-cycle-demo-paul-20260707" target="_blank" rel="noreferrer">開啟 demo 通知台</a>
           </div>
         </div>
         <div class="card">
@@ -391,7 +406,7 @@
         <button class="chip" data-prompt="同學提問：這個客服機器人為什麼要上傳客服手冊？">同學提問</button>
       </section>
 
-      <div class="hint">中階版：前端先答，答不了就產生 ticket；可 POST 到 n8n / Zapier webhook。</div>
+      <div class="hint">中階版：前端先答，答不了就產生 ticket，並送到 demo 通知台；正式版可改 n8n / Zapier。</div>
     </aside>
 
     <section class="chat" aria-label="客服聊天">
@@ -442,6 +457,7 @@
     let classQuestionCount = 0;
     let offDuty = false;
     let lastUserText = "";
+    const defaultWebhookUrl = "https://ntfy.sh/velora-cycle-demo-paul-20260707";
     const messages = document.querySelector("#messages");
     const input = document.querySelector("#input");
     const form = document.querySelector("#composer");
@@ -499,7 +515,8 @@
     function handoff(message) {
       const ticket = createTicket(message);
       sendTicket(ticket);
-      return `<strong>真人客服接手模式</strong>\n${message}\n\n已建立接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
+      const status = "已建立接手單，並送到 demo 通知台。";
+      return `<strong>等待真人處理</strong>\n${message}\n\n${status}\n接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
     }
 
     function classAnswer(text) {
@@ -541,13 +558,22 @@
 
     async function sendTicket(ticket) {
       saveTicket(ticket, "local");
-      const url = localStorage.getItem("veloraWebhookUrl") || "";
-      if (!url) return;
+      const url = localStorage.getItem("veloraWebhookUrl") || defaultWebhookUrl;
       try {
         await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(ticket)
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8",
+            "Title": `Velora demo handoff ${ticket.id}`,
+            "Tags": "telephone_receiver,robot"
+          },
+          body: [
+            `Velora demo handoff ticket: ${ticket.id}`,
+            `Customer message: ${ticket.customerMessage}`,
+            `Suggested next step: ${ticket.handoffMessage}`,
+            `Created: ${ticket.createdAt}`,
+            `Privacy: ${ticket.privacy}`
+          ].join("\n")
         });
         saveTicket(ticket, "sent");
       } catch {
@@ -565,8 +591,16 @@
     function renderTickets() {
       const tickets = JSON.parse(localStorage.getItem("veloraTickets") || "[]");
       ticketList.innerHTML = tickets.length
-        ? tickets.map(ticket => `<div class="ticket"><b>${ticket.id}</b>｜${ticket.status}<br>${escapeHtml(ticket.customerMessage)}</div>`).join("")
+        ? tickets.map(ticket => `<div class="ticket" data-status="${ticket.status}"><b>${ticket.id}</b>｜${statusLabel(ticket.status)}<br>${escapeHtml(ticket.customerMessage)}</div>`).join("")
         : `<div class="small">尚無接手單。</div>`;
+    }
+
+    function statusLabel(status) {
+      return {
+        local: "只存在本機，未通知真人",
+        sent: "已送出通知",
+        failed: "通知失敗"
+      }[status] || status;
     }
 
     function escapeHtml(text) {
@@ -580,9 +614,11 @@
     }
 
     function loadWebhook() {
-      const url = localStorage.getItem("veloraWebhookUrl") || "";
+      const url = localStorage.getItem("veloraWebhookUrl") || defaultWebhookUrl;
       webhookInput.value = url;
-      webhookStatus.textContent = url ? "已設定 webhook：接手單會 POST 到值班流程。" : "未設定 webhook：接手單先存在本機 demo inbox。";
+      webhookStatus.textContent = url === defaultWebhookUrl
+        ? "已啟用公開 demo 通知：接手單會送到 ntfy 測試值班台。"
+        : "已設定自訂 webhook：接手單會 POST 到值班流程。";
     }
 
     form.addEventListener("submit", event => {
