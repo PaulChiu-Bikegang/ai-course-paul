@@ -141,6 +141,46 @@
       transition: transform .16s ease, background .16s ease, border-color .16s ease;
     }
 
+    .webhook-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-input {
+      min-height: 38px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .mini-button {
+      padding: 0 12px;
+      border-radius: 12px;
+      background: rgba(34, 211, 238, .16);
+      color: #cffafe;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .ticket-list {
+      display: grid;
+      gap: 8px;
+      max-height: 170px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    .ticket {
+      padding: 9px;
+      border: 1px solid rgba(251, 191, 36, .22);
+      border-radius: 12px;
+      background: rgba(251, 191, 36, .08);
+      color: #fde68a;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     .chip:hover {
       transform: translateY(-2px);
       background: rgba(34, 211, 238, .16);
@@ -328,6 +368,19 @@
           <b>客服規則</b>
           <div class="small">不編造庫存、交期、保固與退款。轉真人時由 AI 助教接手整理，但不碰真資料。</div>
         </div>
+        <div class="card">
+          <b>值班通道</b>
+          <div class="small" id="webhookStatus">未設定 webhook：接手單先存在本機 demo inbox。</div>
+          <div class="webhook-form">
+            <input class="mini-input" id="webhookUrl" placeholder="貼 n8n / Zapier webhook URL">
+            <button class="mini-button" id="saveWebhook" type="button">保存</button>
+          </div>
+        </div>
+        <div class="card">
+          <b>Demo Inbox</b>
+          <div class="small">真人接手單會出現在這裡，方便課堂展示。</div>
+          <div class="ticket-list" id="ticketList"></div>
+        </div>
       </section>
 
       <section class="chips" aria-label="快速問題">
@@ -338,7 +391,7 @@
         <button class="chip" data-prompt="同學提問：這個客服機器人為什麼要上傳客服手冊？">同學提問</button>
       </section>
 
-      <div class="hint">進階版：轉真人客服由 AI 助教模擬接手；同學提問最多 5 題後禮貌下班。</div>
+      <div class="hint">中階版：前端先答，答不了就產生 ticket；可 POST 到 n8n / Zapier webhook。</div>
     </aside>
 
     <section class="chat" aria-label="客服聊天">
@@ -388,9 +441,14 @@
 
     let classQuestionCount = 0;
     let offDuty = false;
+    let lastUserText = "";
     const messages = document.querySelector("#messages");
     const input = document.querySelector("#input");
     const form = document.querySelector("#composer");
+    const webhookInput = document.querySelector("#webhookUrl");
+    const webhookStatus = document.querySelector("#webhookStatus");
+    const saveWebhook = document.querySelector("#saveWebhook");
+    const ticketList = document.querySelector("#ticketList");
 
     function addMessage(role, text) {
       const wrap = document.createElement("div");
@@ -439,7 +497,9 @@
     }
 
     function handoff(message) {
-      return `<strong>真人客服接手模式</strong>\n${message}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
+      const ticket = createTicket(message);
+      sendTicket(ticket);
+      return `<strong>真人客服接手模式</strong>\n${message}\n\n已建立接手單：${ticket.id}\n\n界線提醒：這是課堂假資料 demo，我不會透露公司機密、真實訂單、成本、後台流程或私人資料，也不會承諾已退款或已補寄。`;
     }
 
     function classAnswer(text) {
@@ -461,8 +521,68 @@
     }
 
     function ask(text) {
+      lastUserText = text;
       addMessage("user", text);
       window.setTimeout(() => addMessage("bot", answer(text)), 260);
+    }
+
+    function createTicket(message) {
+      const id = `TICKET-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${String(Date.now()).slice(-5)}`;
+      return {
+        id,
+        source: "Velora Cycle demo",
+        customerMessage: lastUserText,
+        handoffMessage: message.replace(/<[^>]*>/g, ""),
+        riskLevel: "needs-human-review",
+        createdAt: new Date().toISOString(),
+        privacy: "demo-only-no-real-customer-data"
+      };
+    }
+
+    async function sendTicket(ticket) {
+      saveTicket(ticket, "local");
+      const url = localStorage.getItem("veloraWebhookUrl") || "";
+      if (!url) return;
+      try {
+        await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(ticket)
+        });
+        saveTicket(ticket, "sent");
+      } catch {
+        saveTicket(ticket, "failed");
+      }
+    }
+
+    function saveTicket(ticket, status) {
+      const tickets = JSON.parse(localStorage.getItem("veloraTickets") || "[]");
+      const next = [{ ...ticket, status }, ...tickets.filter(item => item.id !== ticket.id)].slice(0, 8);
+      localStorage.setItem("veloraTickets", JSON.stringify(next));
+      renderTickets();
+    }
+
+    function renderTickets() {
+      const tickets = JSON.parse(localStorage.getItem("veloraTickets") || "[]");
+      ticketList.innerHTML = tickets.length
+        ? tickets.map(ticket => `<div class="ticket"><b>${ticket.id}</b>｜${ticket.status}<br>${escapeHtml(ticket.customerMessage)}</div>`).join("")
+        : `<div class="small">尚無接手單。</div>`;
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function loadWebhook() {
+      const url = localStorage.getItem("veloraWebhookUrl") || "";
+      webhookInput.value = url;
+      webhookStatus.textContent = url ? "已設定 webhook：接手單會 POST 到值班流程。" : "未設定 webhook：接手單先存在本機 demo inbox。";
     }
 
     form.addEventListener("submit", event => {
@@ -473,11 +593,23 @@
       ask(text);
     });
 
+    saveWebhook.addEventListener("click", () => {
+      const url = webhookInput.value.trim();
+      if (url && !/^https:\/\//i.test(url)) {
+        webhookStatus.textContent = "請使用 https:// 開頭的 webhook URL。";
+        return;
+      }
+      localStorage.setItem("veloraWebhookUrl", url);
+      loadWebhook();
+    });
+
     document.querySelectorAll("[data-prompt]").forEach(button => {
       button.addEventListener("click", () => ask(button.dataset.prompt));
     });
 
-    addMessage("bot", "您好，我是 <strong>Velora Cycle</strong> 的 AI 客服助理。可以查詢假訂單、回答規格與退換貨問題；遇到高風險情境會由 AI 助教模擬接手。試試輸入：VC-260707-1006");
+    loadWebhook();
+    renderTickets();
+    addMessage("bot", "您好，我是 <strong>Velora Cycle</strong> 的 AI 客服助理。可以查詢假訂單、回答規格與退換貨問題；遇到高風險情境會建立接手單給值班流程。試試輸入：VC-260707-1006");
   </script>
 </body>
 </html>
